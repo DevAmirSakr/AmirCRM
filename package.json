@@ -1,0 +1,22 @@
+{
+  "name": "amircrm",
+  "version": "1.0.0",
+  "description": "نظام CRM لإدارة ومتابعة عملاء حملات ميتا وطلبات إنشاء المواقع الإلكترونية",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "crm",
+    "meta-ads",
+    "leads",
+    "arabic-crm",
+    "websites"
+  ],
+  "author": "Amir Sakr",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

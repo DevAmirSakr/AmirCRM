@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AmirCRM | منصة إدارة عملاء حملات ميتا وتطوير المواقع</title>
+  <!-- Google Fonts: IBM Plex Sans Arabic & Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">Amir<span>CRM</span></h1>
+            <p class="brand-subtitle">إدارة مبيعات وتطوير المواقع</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">القوائم الرئيسية</div>
+        <button class="nav-item active" data-view="kanban" id="navKanban">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="5" height="18" rx="1"/>
+            <rect x="10.5" y="3" width="5" height="12" rx="1"/>
+            <rect x="18" y="3" width="5" height="15" rx="1"/>
+          </svg>
+          <span>لوحة المبيعات (Pipeline)</span>
+          <span class="nav-badge" id="navPipelineCount">0</span>
+        </button>
+
+        <button class="nav-item" data-view="table" id="navTable">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/>
+          </svg>
+          <span>جدول العملاء (Table)</span>
+        </button>
+
+        <button class="nav-item" data-view="analytics" id="navAnalytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          <span>تحليلات حملات ميتا</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Mini Stats Widget -->
+      <div class="sidebar-widget">
+        <div class="widget-header">
+          <span class="widget-title">إغلاق الصفقات</span>
+          <span class="widget-tag" id="sidebarConversionRate">0%</span>
+        </div>
+        <div class="widget-metric">
+          <span class="metric-label">العربون المحصل</span>
+          <span class="metric-value text-emerald" id="sidebarDeposits">0 ج.م</span>
+        </div>
+        <div class="widget-metric">
+          <span class="metric-label">إجمالي المبيعات</span>
+          <span class="metric-value text-cyan" id="sidebarWonRevenue">0 ج.م</span>
+        </div>
+        <div class="widget-progress">
+          <div class="progress-bar" id="sidebarProgressBar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Lead Sources Info -->
+      <div class="sidebar-sources">
+        <div class="source-tag meta-tag">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="source-icon">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+          <span>حملات Meta Ads نشطة</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-content">
+      <!-- Top Action Bar -->
+      <header class="top-header">
+        <div class="header-right">
+          <button class="mobile-toggle" id="sidebarToggle" aria-label="تبديل القائمة">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <div class="header-headings">
+            <h2 class="view-title" id="pageTitle">لوحة مبيعات ومتابعة العملاء</h2>
+            <p class="view-subtitle">متابعة عملاء إعلانات ميتا لطلبات إنشاء وتطوير المواقع والمتاجر</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-secondary btn-icon-text" id="btnSimulateMeta" title="محاكاة وصول ليد تلقائي من حملات ميتا">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-pulse">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <span>⚡ محاكاة عميل من ميتا</span>
+          </button>
+
+          <button class="btn btn-secondary btn-icon-text" id="btnOpenCsvModal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            <span>📥 استيراد CSV</span>
+          </button>
+
+          <button class="btn btn-primary btn-icon-text" id="btnOpenNewLeadModal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            <span>+ إضافة عميل جديد</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- KPIs Dashboard Bar -->
+      <section class="kpis-section">
+        <div class="kpi-card" id="kpiTotalCard">
+          <div class="kpi-icon icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">إجمالي العملاء</span>
+            <div class="kpi-number" id="kpiTotalLeads">--</div>
+            <span class="kpi-sub">جميع العملاء المسجلين</span>
+          </div>
+        </div>
+
+        <div class="kpi-card" id="kpiNewCard">
+          <div class="kpi-icon icon-meta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">عملاء جدد (ميتا)</span>
+            <div class="kpi-number text-meta" id="kpiNewLeads">--</div>
+            <span class="kpi-sub">في انتظار أول تواصل</span>
+          </div>
+        </div>
+
+        <div class="kpi-card" id="kpiPipelineCard">
+          <div class="kpi-icon icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">قيمة الصفقات النشطة</span>
+            <div class="kpi-number text-amber" id="kpiExpectedPipeline">-- ج.م</div>
+            <span class="kpi-sub" id="kpiActiveCount">-- صفقة قيد التفاوض</span>
+          </div>
+        </div>
+
+        <div class="kpi-card" id="kpiWonCard">
+          <div class="kpi-icon icon-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">المبيعات والعربون</span>
+            <div class="kpi-number text-emerald" id="kpiWonRevenue">-- ج.م</div>
+            <span class="kpi-sub" id="kpiDepositsSub">عربون محصل: -- ج.م</span>
+          </div>
+        </div>
+
+        <div class="kpi-card" id="kpiConversionCard">
+          <div class="kpi-icon icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 6l4 14-8-5-8 5 4-14M12 2v4"/>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">معدل إغلاق الصفقات</span>
+            <div class="kpi-number text-purple" id="kpiConversionRate">--%</div>
+            <span class="kpi-sub" id="kpiWonLostSub">-- صفقة مغلقة</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-clickable" id="kpiFollowupCard" title="انقر لتصفية المتابعات المستحقة اليوم">
+          <div class="kpi-icon icon-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">متابعات مستحقة اليوم</span>
+            <div class="kpi-number text-rose" id="kpiDueFollowups">0</div>
+            <span class="kpi-sub" id="kpiDueStatus">اضغط للتصفية السريعة</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filter & Controls Toolbar -->
+      <section class="toolbar-section">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="بحث بالاسم، رقم الهاتف، اسم النشاط، أو اسم الحملة..." autocomplete="off">
+          <button class="clear-search hidden" id="btnClearSearch" aria-label="مسح البحث">&times;</button>
+        </div>
+
+        <div class="filters-group">
+          <!-- Website Type Filter -->
+          <div class="select-wrapper">
+            <select id="filterWebsiteType" class="form-select">
+              <option value="">جميع أنواع المواقع</option>
+              <option value="ecommerce">متجر إلكتروني</option>
+              <option value="corporate">موقع تعريفي لشركة</option>
+              <option value="landing">صفحة هبوط (Landing Page)</option>
+              <option value="booking">منصة حجز / تعليمية</option>
+              <option value="custom">برمجة خاصة / ويب أبليكيشن</option>
+            </select>
+          </div>
+
+          <!-- Priority Filter -->
+          <div class="select-wrapper">
+            <select id="filterPriority" class="form-select">
+              <option value="">جميع الأولويات</option>
+              <option value="high">عالية 🔥</option>
+              <option value="medium">متوسطة</option>
+              <option value="low">منخفضة</option>
+            </select>
+          </div>
+
+          <!-- Ad Source Filter -->
+          <div class="select-wrapper">
+            <select id="filterAdSource" class="form-select">
+              <option value="">جميع مصادر الإعلانات</option>
+              <option value="meta_form">نموذج ميتا الفوري (Lead Form)</option>
+              <option value="whatsapp_ad">إعلان رسائل واتساب</option>
+              <option value="instagram_dm">رسائل إنستجرام</option>
+              <option value="manual">إدخال يدوي / توصية</option>
+            </select>
+          </div>
+
+          <!-- Follow-up Due Quick Filter -->
+          <button class="btn btn-toggle" id="btnToggleDueFollowups">
+            <span class="dot-indicator"></span>
+            <span>متابعات اليوم فقط</span>
+          </button>
+
+          <!-- Reset Filters Button -->
+          <button class="btn btn-ghost" id="btnResetFilters" title="إعادة تعيين الفلاتر">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            <span>إلغاء الفلترة</span>
+          </button>
+        </div>
+
+        <!-- View Switcher -->
+        <div class="view-switcher">
+          <button class="view-btn active" data-view="kanban" title="لوحة المبيعات (Kanban)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="5" height="18" rx="1"/>
+              <rect x="10.5" y="3" width="5" height="12" rx="1"/>
+              <rect x="18" y="3" width="5" height="15" rx="1"/>
+            </svg>
+          </button>
+          <button class="view-btn" data-view="table" title="جدول العملاء (Table)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/>
+            </svg>
+          </button>
+          <button class="view-btn" data-view="analytics" title="تقارير حملات ميتا">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- VIEW 1: KANBAN PIPELINE -->
+      <section class="view-pane active" id="viewKanban">
+        <div class="kanban-board" id="kanbanBoard">
+          <!-- Column: new -->
+          <div class="kanban-col" data-stage="new">
+            <div class="col-header header-new">
+              <div class="col-title-wrap">
+                <span class="stage-dot dot-new"></span>
+                <span class="col-title">عميل جديد (ميتا)</span>
+              </div>
+              <div class="col-meta">
+                <span class="count-badge" id="count_new">0</span>
+                <span class="col-sum" id="sum_new">0 ج.م</span>
+              </div>
+            </div>
+            <div class="cards-container" data-stage="new" id="col_new"></div>
+          </div>
+
+          <!-- Column: contacted -->
+          <div class="kanban-col" data-stage="contacted">
+            <div class="col-header header-contacted">
+              <div class="col-title-wrap">
+                <span class="stage-dot dot-contacted"></span>
+                <span class="col-title">تواصل مبدئي</span>
+              </div>
+              <div class="col-meta">
+                <span class="count-badge" id="count_contacted">0</span>
+                <span class="col-sum" id="sum_contacted">0 ج.م</span>
+              </div>
+            </div>
+            <div class="cards-container" data-stage="contacted" id="col_contacted"></div>
+          </div>
+
+          <!-- Column: discovery -->
+          <div class="kanban-col" data-stage="discovery">
+            <div class="col-header header-discovery">
+              <div class="col-title-wrap">
+                <span class="stage-dot dot-discovery"></span>
+                <span class="col-title">تحديد المتطلبات</span>
+              </div>
+              <div class="col-meta">
+                <span class="count-badge" id="count_discovery">0</span>
+                <span class="col-sum" id="sum_discovery">0 ج.م</span>
+              </div>
+            </div>
+            <div class="cards-container" data-stage="discovery" id="col_discovery"></div>
+          </div>
+
+          <!-- Column: proposal -->
+          <div class="kanban-col" data-stage="proposal">
+            <div class="col-header header-proposal">
+              <div class="col-title-wrap">
+                <span class="stage-dot dot-proposal"></span>
+                <span class="col-title">إرسال عرض السعر</span>
+              </div>
+              <div class="col-meta">
+                <span class="count-badge" id="count_proposal">0</span>
+                <span class="col-sum" id="sum_proposal">0 ج.م</span>
+              </div>
+            </div>
+            <div class="cards-container" data-stage="proposal" id="col_proposal"></div>
+          </div>
+
+          <!-- Column: negotiation -->
+          <div class="kanban-col" data-stage="negotiation">
+            <div class="col-header header-negotiation">
+              <div class="col-title-wrap">
+                <span class="stage-dot dot-negotiation"></span>
+                <span class="col-title">تفاوض ومراجعة</span>
+              </div>
+              <div class="col-meta">
+                <span class="count-badge" id="count_negotiation">0</span>
+                <span class="col-sum" id="sum_negotiation">0 ج.م</span>
+              </div>
+            </div>
+            <div class="cards-container" data-stage="negotiation" id="col_negotiation"></div>
+          </div>
+
+          <!-- Column: won -->
+          <div class="kanban-col" data-stage="won">
+            <div class="col-header header-won">
+              <div class="col-title-wrap">
+                <span class="stage-dot dot-won"></span>
+                <span class="col-title">تم الإغلاق بنجاح 🎉</span>
+              </div>
+              <div class="col-meta">
+                <span class="count-badge" id="count_won">0</span>
+                <span class="col-sum" id="sum_won">0 ج.م</span>
+              </div>
+            </div>
+            <div class="cards-container" data-stage="won" id="col_won"></div>
+          </div>
+
+          <!-- Column: lost -->
+          <div class="kanban-col" data-stage="lost">
+            <div class="col-header header-lost">
+              <div class="col-title-wrap">
+                <span class="stage-dot dot-lost"></span>
+                <span class="col-title">مؤجل / غير مهتم</span>
+              </div>
+              <div class="col-meta">
+                <span class="count-badge" id="count_lost">0</span>
+                <span class="col-sum" id="sum_lost">0 ج.م</span>
+              </div>
+            </div>
+            <div class="cards-container" data-stage="lost" id="col_lost"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: TABLE VIEW -->
+      <section class="view-pane" id="viewTable">
+        <div class="table-container">
+          <table class="crm-table">
+            <thead>
+              <tr>
+                <th>العميل والنشاط</th>
+                <th>وسيلة التواصل</th>
+                <th>نوع الموقع المطلوب</th>
+                <th>حملة ميتا / المصدر</th>
+                <th>المرحلة</th>
+                <th>الأولوية</th>
+                <th>قيمة الصفقة</th>
+                <th>العربون المحصل</th>
+                <th>المتابعة القادمة</th>
+                <th>إجراءات سريعة</th>
+              </tr>
+            </thead>
+            <tbody id="leadsTableBody">
+              <!-- Loaded via JavaScript -->
+            </tbody>
+          </table>
+          <div class="table-empty hidden" id="tableEmptyState">
+            <div class="empty-icon">🔍</div>
+            <h3>لا توجد نتائج مطابقة</h3>
+            <p>جرّب تعديل خيارات البحث أو الفلترة لتظهر النتائج.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: META CAMPAIGNS & ANALYTICS -->
+      <section class="view-pane" id="viewAnalytics">
+        <div class="analytics-grid">
+          <!-- Sales Conversion Funnel -->
+          <div class="analytics-card span-2">
+            <div class="card-title">
+              <div class="title-with-icon">
+                <span class="badge-icon">🎯</span>
+                <h3>قمع تحويل المبيعات (Sales Funnel)</h3>
+              </div>
+              <span class="subtext">مسار تقدم عملاء إعلانات ميتا من أول تواصل حتى استلام العربون</span>
+            </div>
+            <div class="funnel-container" id="analyticsFunnel">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Performance By Meta Campaign -->
+          <div class="analytics-card span-2">
+            <div class="card-title">
+              <div class="title-with-icon">
+                <span class="badge-icon">📊</span>
+                <h3>أداء حملات Meta Ads</h3>
+              </div>
+              <span class="subtext">مقارنة العائد وعدد الصفقات المغلقة لكل إعلان</span>
+            </div>
+            <div class="campaign-table-wrap">
+              <table class="compact-table">
+                <thead>
+                  <tr>
+                    <th>اسم الحملة الإعلانية</th>
+                    <th>إجمالي العملاء</th>
+                    <th>الصفقات المغلقة</th>
+                    <th>معدل التحويل</th>
+                    <th>إجمالي الإيرادات</th>
+                  </tr>
+                </thead>
+                <tbody id="campaignsTableBody">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Distribution by Website Type -->
+          <div class="analytics-card">
+            <div class="card-title">
+              <div class="title-with-icon">
+                <span class="badge-icon">💻</span>
+                <h3>الطلب حسب نوع الموقع</h3>
+              </div>
+              <span class="subtext">توزيع المشاريع المطلوبة من العملاء</span>
+            </div>
+            <div class="bars-container" id="websiteTypeBars">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Financial Deal Health -->
+          <div class="analytics-card">
+            <div class="card-title">
+              <div class="title-with-icon">
+                <span class="badge-icon">💰</span>
+                <h3>الملخص المالي والسيولة</h3>
+              </div>
+              <span class="subtext">تفاصيل المبالغ المحصلة والمتبقية</span>
+            </div>
+            <div class="financial-summary-list" id="financialSummary">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- SLIDE-OVER LEAD DETAIL DRAWER & CLOSING WORKSPACE -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="slide-drawer" id="leadDrawer">
+    <div class="drawer-header">
+      <div class="drawer-header-info">
+        <div class="drawer-title-row">
+          <h2 class="drawer-lead-name" id="drawerLeadName">--</h2>
+          <span class="stage-chip" id="drawerStageChip">--</span>
+          <span class="priority-chip" id="drawerPriorityChip">--</span>
+        </div>
+        <div class="drawer-subtitle-row">
+          <span class="drawer-business-name" id="drawerBusinessName">--</span>
+          <span class="drawer-bullet">•</span>
+          <span class="drawer-source-badge" id="drawerSourceBadge">--</span>
+          <span class="drawer-bullet">•</span>
+          <span class="drawer-campaign-name" id="drawerCampaignName">--</span>
+        </div>
+      </div>
+
+      <div class="drawer-header-actions">
+        <!-- Direct Quick Won / Lost Buttons -->
+        <button class="btn btn-sm btn-emerald" id="btnQuickWon" title="إغلاق الصفقة واستلام العربون">
+          ✓ إغلاق الصفقة (Won)
+        </button>
+        <button class="btn btn-sm btn-rose-outline" id="btnQuickLost" title="تحديد الصفقة كـ مؤجلة أو ملغاة">
+          خسارة / تأجيل
+        </button>
+        <button class="btn-close" id="btnCloseDrawer" aria-label="إغلاق">&times;</button>
+      </div>
+    </div>
+
+    <!-- Interactive Stage Stepper -->
+    <div class="stepper-wrap">
+      <div class="stepper-track" id="stageStepper">
+        <button class="step-btn" data-step="new"><span>1</span><label>عميل جديد</label></button>
+        <button class="step-btn" data-step="contacted"><span>2</span><label>تواصل مبدئي</label></button>
+        <button class="step-btn" data-step="discovery"><span>3</span><label>المتطلبات</label></button>
+        <button class="step-btn" data-step="proposal"><span>4</span><label>عرض السعر</label></button>
+        <button class="step-btn" data-step="negotiation"><span>5</span><label>التفاوض</label></button>
+        <button class="step-btn step-won" data-step="won"><span>6</span><label>تم الإغلاق 🎉</label></button>
+        <button class="step-btn step-lost" data-step="lost"><span>✕</span><label>مؤجل</label></button>
+      </div>
+    </div>
+
+    <!-- Drawer Navigation Tabs -->
+    <div class="drawer-tabs">
+      <button class="drawer-tab active" data-drawer-tab="specs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+        </svg>
+        <span>بيانات ومواصفات الموقع</span>
+      </button>
+
+      <button class="drawer-tab" data-drawer-tab="whatsapp">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="whatsapp-tab-icon">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.456 5.711 1.456h.005c6.554 0 11.89-5.335 11.893-11.893 0-3.177-1.237-6.164-3.484-8.411"/>
+        </svg>
+        <span>مُغلق صفقات واتساب</span>
+      </button>
+
+      <button class="drawer-tab" data-drawer-tab="calculator">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <line x1="8" y1="6" x2="16" y2="6"/>
+          <line x1="16" y1="14" x2="16" y2="18"/>
+          <path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/>
+        </svg>
+        <span>حاسبة عرض السعر السريعة</span>
+      </button>
+
+      <button class="drawer-tab" data-drawer-tab="timeline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>سجل المتابعات والنشاطات</span>
+      </button>
+    </div>
+
+    <!-- Drawer Content Body -->
+    <div class="drawer-body">
+      <!-- TAB 1: SPECS & DETAILS -->
+      <div class="drawer-pane active" id="paneSpecs">
+        <form id="drawerLeadForm" class="specs-form">
+          <input type="hidden" id="editLeadId">
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="editName">اسم العميل</label>
+              <input type="text" id="editName" required class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="editPhone">رقم الواتساب / الهاتف</label>
+              <input type="text" id="editPhone" required class="form-input" placeholder="2010xxxxxxxx">
+            </div>
+
+            <div class="form-group">
+              <label for="editEmail">البريد الإلكتروني</label>
+              <input type="email" id="editEmail" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="editBusinessName">اسم النشاط التجاري / الشركة</label>
+              <input type="text" id="editBusinessName" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="editWebsiteType">نوع الموقع المطلوب</label>
+              <select id="editWebsiteType" class="form-select">
+                <option value="ecommerce">متجر إلكتروني</option>
+                <option value="corporate">موقع تعريفي لشركة</option>
+                <option value="landing">صفحة هبوط (Landing Page)</option>
+                <option value="booking">منصة حجز / تعليمية</option>
+                <option value="custom">برمجة خاصة / ويب أبليكيشن</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editStage">مرحلة الصفقة الحالية</label>
+              <select id="editStage" class="form-select">
+                <option value="new">عميل جديد (إعلان ميتا)</option>
+                <option value="contacted">تم التواصل المبدئي</option>
+                <option value="discovery">تحديد متطلبات الموقع</option>
+                <option value="proposal">تم إرسال عرض السعر</option>
+                <option value="negotiation">تفاوض ومراجعة العرض</option>
+                <option value="won">تم إغلاق الصفقة (استلام العربون)</option>
+                <option value="lost">لم يكتمل / مؤجل</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editPriority">أولوية المتابعة</label>
+              <select id="editPriority" class="form-select">
+                <option value="high">عالية 🔥</option>
+                <option value="medium">متوسطة</option>
+                <option value="low">منخفضة</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editAdSource">مصدر الليد</label>
+              <select id="editAdSource" class="form-select">
+                <option value="meta_form">نموذج ميتا الفوري (Lead Form)</option>
+                <option value="whatsapp_ad">إعلان رسائل واتساب</option>
+                <option value="instagram_dm">رسائل إنستجرام</option>
+                <option value="manual">إدخال يدوي / توصية</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editCampaignName">اسم حملة ميتا</label>
+              <input type="text" id="editCampaignName" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="editBudget">ميزانية العميل المبدئية (ج.م)</label>
+              <input type="number" id="editBudget" min="0" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="editDealValue">قيمة العرض المعتمد (ج.م)</label>
+              <input type="number" id="editDealValue" min="0" class="form-input font-bold text-emerald">
+            </div>
+
+            <div class="form-group">
+              <label for="editDepositPaid">العربون المحصل (ج.م)</label>
+              <input type="number" id="editDepositPaid" min="0" class="form-input font-bold text-cyan">
+            </div>
+
+            <div class="form-group span-2">
+              <label for="editNextFollowup">موعد المتابعة القادمة</label>
+              <input type="datetime-local" id="editNextFollowup" class="form-input">
+            </div>
+          </div>
+
+          <!-- Requirements Checklist Chips -->
+          <div class="form-group mt-3">
+            <label class="mb-1 block font-semibold">الميزات والمتطلبات التقنية المطلوبة للموقع:</label>
+            <div class="requirements-chips-grid" id="requirementsChips">
+              <label class="chip-label">
+                <input type="checkbox" name="requirements" value="domain_hosting">
+                <span class="chip-text">دومين واستضافة سحابية</span>
+              </label>
+              <label class="chip-label">
+                <input type="checkbox" name="requirements" value="payment_gateway">
+                <span class="chip-text">ربط بوابة دفع إلكتروني</span>
+              </label>
+              <label class="chip-label">
+                <input type="checkbox" name="requirements" value="shipping_integration">
+                <span class="chip-text">ربط شركات الشحن</span>
+              </label>
+              <label class="chip-label">
+                <input type="checkbox" name="requirements" value="meta_pixel">
+                <span class="chip-text">ربط Meta Pixel & CAPI</span>
+              </label>
+              <label class="chip-label">
+                <input type="checkbox" name="requirements" value="arabic_english">
+                <span class="chip-text">ثنائي اللغة (عربي / إنجليزي)</span>
+              </label>
+              <label class="chip-label">
+                <input type="checkbox" name="requirements" value="seo_setup">
+                <span class="chip-text">تهيئة محركات البحث SEO</span>
+              </label>
+              <label class="chip-label">
+                <input type="checkbox" name="requirements" value="admin_dashboard">
+                <span class="chip-text">لوحة تحكم سهلة بالعربية</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group mt-3">
+            <label for="editNotes">ملاحظات واحتياجات العميل</label>
+            <textarea id="editNotes" rows="3" class="form-textarea" placeholder="أي ملاحظات خاصة بمتطلبات العميل أو الاتفاق..."></textarea>
+          </div>
+
+          <div class="specs-actions">
+            <button type="submit" class="btn btn-primary" id="btnSaveLeadSpecs">
+              💾 حفظ التعديلات
+            </button>
+            <button type="button" class="btn btn-danger-ghost" id="btnDeleteLead">
+              🗑️ حذف العميل
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 2: WHATSAPP DEAL CLOSER -->
+      <div class="drawer-pane" id="paneWhatsapp">
+        <div class="wa-closer-box">
+          <div class="closer-intro">
+            <div class="wa-icon-large">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.456 5.711 1.456h.005c6.554 0 11.89-5.335 11.893-11.893 0-3.177-1.237-6.164-3.484-8.411"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="closer-title">مُغلق الصفقات السريع عبر واتساب</h3>
+              <p class="closer-desc">اختر قالب الرد المناسب للمرحلة الحالية، عدّل الرسالة، وأرسلها مباشرة للعميل بضغطة زر مع توثيق المتابعة في النظام تلقائياً.</p>
+            </div>
+          </div>
+
+          <!-- Script Template Pills -->
+          <div class="script-pills-row">
+            <button class="script-pill active" data-script-id="welcome">
+              <span class="pill-number">1</span>
+              <span>ترحيب فوري بعميل الإعلان</span>
+            </button>
+            <button class="script-pill" data-script-id="portfolio">
+              <span class="pill-number">2</span>
+              <span>سابقة الأعمال وموعد مكالمة</span>
+            </button>
+            <button class="script-pill" data-script-id="quote">
+              <span class="pill-number">3</span>
+              <span>عرض السعر الفني والمالي</span>
+            </button>
+            <button class="script-pill" data-script-id="followup">
+              <span class="pill-number">4</span>
+              <span>متابعة ذكية لتحريك العميل</span>
+            </button>
+            <button class="script-pill" data-script-id="closing">
+              <span class="pill-number">5</span>
+              <span>تأكيد الاتفاق وطلب العربون</span>
+            </button>
+          </div>
+
+          <!-- Dynamic Template Editor -->
+          <div class="message-editor-card">
+            <div class="editor-header">
+              <span class="editor-label">نص الرسالة الجاهزة للإرسال:</span>
+              <div class="editor-actions">
+                <button type="button" class="btn-tool" id="btnCopyWhatsappMsg">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
+                  <span>نسخ النص</span>
+                </button>
+              </div>
+            </div>
+            <textarea id="whatsappMessageContent" rows="6" class="form-textarea message-text-area" dir="rtl"></textarea>
+            <div class="editor-footer">
+              <div class="recipient-info">
+                <span>سيتم الإرسال إلى: </span>
+                <strong id="whatsappRecipientNumber" class="text-mono">--</strong>
+              </div>
+              <button type="button" class="btn btn-whatsapp-large" id="btnSendWhatsappDirect">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.456 5.711 1.456h.005c6.554 0 11.89-5.335 11.893-11.893 0-3.177-1.237-6.164-3.484-8.411"/>
+                </svg>
+                <span>إرسال عبر واتساب وتوثيق المتابعة</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: QUICK QUOTE CALCULATOR -->
+      <div class="drawer-pane" id="paneCalculator">
+        <div class="calculator-card">
+          <div class="calc-header">
+            <h3>حاسبة عرض السعر التقديري للموقع</h3>
+            <p>اختر نوع الموقع والميزات الإضافية لحساب التكلفة المقترحة واعتمادها في الصفقة فوراً.</p>
+          </div>
+
+          <div class="calc-section">
+            <label class="calc-label">1. نوع الموقع الأساسي:</label>
+            <div class="calc-options-grid">
+              <label class="calc-option">
+                <input type="radio" name="calc_base_type" value="15000" data-type-name="متجر إلكتروني" checked>
+                <div class="option-box">
+                  <span class="option-title">متجر إلكتروني</span>
+                  <span class="option-price">15,000 ج.م</span>
+                </div>
+              </label>
+
+              <label class="calc-option">
+                <input type="radio" name="calc_base_type" value="9000" data-type-name="موقع تعريفي لشركة">
+                <div class="option-box">
+                  <span class="option-title">موقع تعريفي لشركة</span>
+                  <span class="option-price">9,000 ج.م</span>
+                </div>
+              </label>
+
+              <label class="calc-option">
+                <input type="radio" name="calc_base_type" value="5000" data-type-name="صفحة هبوط (Landing Page)">
+                <div class="option-box">
+                  <span class="option-title">صفحة هبوط (Landing)</span>
+                  <span class="option-price">5,000 ج.م</span>
+                </div>
+              </label>
+
+              <label class="calc-option">
+                <input type="radio" name="calc_base_type" value="18000" data-type-name="منصة حجوزات / تعليمية">
+                <div class="option-box">
+                  <span class="option-title">منصة حجوزات / تعليمية</span>
+                  <span class="option-price">18,000 ج.م</span>
+                </div>
+              </label>
+
+              <label class="calc-option">
+                <input type="radio" name="calc_base_type" value="25000" data-type-name="برمجة خاصة / ويب أب">
+                <div class="option-box">
+                  <span class="option-title">برمجة خاصة / Web App</span>
+                  <span class="option-price">25,000 ج.م</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="calc-section">
+            <label class="calc-label">2. الإضافات والميزات التقنية:</label>
+            <div class="addons-list">
+              <label class="addon-item">
+                <input type="checkbox" class="calc-addon" value="2500" data-addon-name="دومين واستضافة سحابية سنة">
+                <div class="addon-info">
+                  <span class="addon-title">دومين واستضافة سحابية فائقة السرعة لمدة سنة</span>
+                  <span class="addon-desc">دومين .com + شهادة أمان SSL + بريد رسمي</span>
+                </div>
+                <span class="addon-price">+ 2,500 ج.م</span>
+              </label>
+
+              <label class="addon-item">
+                <input type="checkbox" class="calc-addon" value="3000" data-addon-name="ربط بوابة دفع إلكتروني">
+                <div class="addon-info">
+                  <span class="addon-title">ربط بوابة دفع إلكتروني (Paymob / Fawry / Tap)</span>
+                  <span class="addon-desc">قبول فيزا، ماستركارد، ومحافظ إلكترونية مع تفعيل الأمان</span>
+                </div>
+                <span class="addon-price">+ 3,000 ج.م</span>
+              </label>
+
+              <label class="addon-item">
+                <input type="checkbox" class="calc-addon" value="2000" data-addon-name="ربط شركات الشحن">
+                <div class="addon-info">
+                  <span class="addon-title">ربط شركات الشحن والمخازن التلقائي (Bosta / Aramex)</span>
+                  <span class="addon-desc">توليد بوالص الشحن وتتبع الشحنات أوتوماتيكياً</span>
+                </div>
+                <span class="addon-price">+ 2,000 ج.م</span>
+              </label>
+
+              <label class="addon-item">
+                <input type="checkbox" class="calc-addon" value="1500" data-addon-name="ربط Meta Pixel & CAPI">
+                <div class="addon-info">
+                  <span class="addon-title">ربط Meta Pixel وتتبع CAPI المتقدم</span>
+                  <span class="addon-desc">تتبع الشراء والإضافة للسلة بدقة لتخفيض تكلفة إعلانات ميتا</span>
+                </div>
+                <span class="addon-price">+ 1,500 ج.م</span>
+              </label>
+
+              <label class="addon-item">
+                <input type="checkbox" class="calc-addon" value="3500" data-addon-name="موقع ثنائي اللغة">
+                <div class="addon-info">
+                  <span class="addon-title">تخصيص ثنائي اللغة (عربي / إنجليزي متكامل)</span>
+                  <span class="addon-desc">تبديل فوري للواجهة RTL و LTR مع ترجمة كاملة</span>
+                </div>
+                <span class="addon-price">+ 3,500 ج.م</span>
+              </label>
+
+              <label class="addon-item">
+                <input type="checkbox" class="calc-addon" value="2500" data-addon-name="تهيئة SEO المتقدمة">
+                <div class="addon-info">
+                  <span class="addon-title">تهيئة محركات البحث المتقدمة (SEO)</span>
+                  <span class="addon-desc">خريطة الموقع، سرعة الصفحات، وهيكلة الميتا تاج لتصدر جوجل</span>
+                </div>
+                <span class="addon-price">+ 2,500 ج.م</span>
+              </label>
+
+              <label class="addon-item">
+                <input type="checkbox" class="calc-addon" value="2000" data-addon-name="لوحة تحكم وتدريب">
+                <div class="addon-info">
+                  <span class="addon-title">لوحة تحكم مخصصة وفيديوهات تدريبية مسجلة</span>
+                  <span class="addon-desc">دليل فيديو شامل لإدارة المنتجات والطلبات بدون مبرمج</span>
+                </div>
+                <span class="addon-price">+ 2,000 ج.م</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Total Calculation Result Box -->
+          <div class="calc-result-box">
+            <div class="result-breakdown">
+              <div class="result-row">
+                <span>السعر التقديري الإجمالي:</span>
+                <span class="result-price" id="calcEstimatedTotal">15,000 ج.م</span>
+              </div>
+              <div class="result-row sub">
+                <span>العربون المقترح للحجز (50%):</span>
+                <span class="result-deposit" id="calcDepositSuggested">7,500 ج.م</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-emerald-large" id="btnApplyQuoteToLead">
+              ⚡ اعتماد هذا السعر وتحديث قيمة الصفقة
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: ACTIVITY TIMELINE -->
+      <div class="drawer-pane" id="paneTimeline">
+        <!-- New Activity Form -->
+        <div class="add-activity-box">
+          <h4 class="box-title">توثيق نشاط أو متابعة جديدة</h4>
+          <form id="addActivityForm" class="activity-form">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="activityType">نوع النشاط</label>
+                <select id="activityType" class="form-select">
+                  <option value="whatsapp">رسالة واتساب (WhatsApp)</option>
+                  <option value="call">مكالمة هاتفية (Call)</option>
+                  <option value="meeting">اجتماع أونلاين / حضوري (Meeting)</option>
+                  <option value="proposal">إرسال عرض سعر (Proposal)</option>
+                  <option value="note">ملاحظة داخلية (Note)</option>
+                </select>
+              </div>
+
+              <div class="form-group flex-1">
+                <label for="activityFollowupDate">تحديث موعد المتابعة القادمة</label>
+                <input type="datetime-local" id="activityFollowupDate" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="activitySummary">تفاصيل وموجز ما تم في المتابعة</label>
+              <textarea id="activitySummary" required rows="2" class="form-textarea" placeholder="اكتب ملخص المكالمة أو ما تم الاتفاق عليه مع العميل..."></textarea>
+            </div>
+
+            <div class="form-actions-right">
+              <button type="submit" class="btn btn-primary" id="btnSubmitActivity">
+                + توثيق النشاط
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Activity Feed List -->
+        <div class="timeline-container">
+          <h4 class="timeline-heading">السجل الزمني للمتابعات</h4>
+          <div class="timeline-list" id="activityTimelineList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MODAL: ADD / CREATE NEW LEAD -->
+  <div class="modal-overlay" id="newLeadModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">إضافة عميل جديد للنظام</h3>
+        <button class="modal-close" id="btnCloseNewLeadModal">&times;</button>
+      </div>
+
+      <form id="newLeadForm" class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="newLeadName">اسم العميل <span class="required">*</span></label>
+            <input type="text" id="newLeadName" required class="form-input" placeholder="مثال: أحمد عبد الله">
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadPhone">رقم الواتساب / الهاتف <span class="required">*</span></label>
+            <input type="text" id="newLeadPhone" required class="form-input" placeholder="2010xxxxxxxx">
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadEmail">البريد الإلكتروني</label>
+            <input type="email" id="newLeadEmail" class="form-input" placeholder="client@example.com">
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadBusiness">اسم النشاط التجاري</label>
+            <input type="text" id="newLeadBusiness" class="form-input" placeholder="مثال: متجر أصايل للعطور">
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadWebsiteType">نوع الموقع المطلوب</label>
+            <select id="newLeadWebsiteType" class="form-select">
+              <option value="ecommerce">متجر إلكتروني</option>
+              <option value="corporate">موقع تعريفي لشركة</option>
+              <option value="landing">صفحة هبوط (Landing Page)</option>
+              <option value="booking">منصة حجز / تعليمية</option>
+              <option value="custom">برمجة خاصة / ويب أب</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadStage">المرحلة المبدئية</label>
+            <select id="newLeadStage" class="form-select">
+              <option value="new" selected>عميل جديد (إعلان ميتا)</option>
+              <option value="contacted">تم التواصل المبدئي</option>
+              <option value="discovery">تحديد المتطلبات</option>
+              <option value="proposal">إرسال عرض السعر</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadPriority">الأولوية</label>
+            <select id="newLeadPriority" class="form-select">
+              <option value="high">عالية 🔥</option>
+              <option value="medium" selected>متوسطة</option>
+              <option value="low">منخفضة</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadSource">مصدر الإعلان</label>
+            <select id="newLeadSource" class="form-select">
+              <option value="meta_form" selected>نموذج ميتا الفوري (Lead Form)</option>
+              <option value="whatsapp_ad">إعلان رسائل واتساب</option>
+              <option value="instagram_dm">رسائل إنستجرام</option>
+              <option value="manual">إدخال يدوي / توصية</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadCampaign">اسم الحملة الإعلانية</label>
+            <input type="text" id="newLeadCampaign" class="form-input" value="حملة إنشاء المتاجر - ميتا 2026">
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadBudget">الميزانية المتوقعة (ج.م)</label>
+            <input type="number" id="newLeadBudget" min="0" class="form-input" placeholder="0">
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadDealValue">قيمة الصفقة المقدرة (ج.م)</label>
+            <input type="number" id="newLeadDealValue" min="0" class="form-input" placeholder="0">
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadNextFollowup">موعد المتابعة الأولى</label>
+            <input type="datetime-local" id="newLeadNextFollowup" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group mt-3">
+          <label for="newLeadNotes">ملاحظات أولية</label>
+          <textarea id="newLeadNotes" rows="2" class="form-textarea" placeholder="تفاصيل الطلب أو ما ذكره العميل في الإعلان..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelNewLead">إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitNewLead">إضافة العميل</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CSV IMPORT FROM META -->
+  <div class="modal-overlay" id="csvModalOverlay">
+    <div class="modal-box modal-wide">
+      <div class="modal-header">
+        <h3 class="modal-title">📥 استيراد عملاء Meta Ads من ملف CSV</h3>
+        <button class="modal-close" id="btnCloseCsvModal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-intro">
+          يمكنك تصدير العملاء مباشرة من <strong>Meta Ads Manager (مدير إعلانات فيسبوك)</strong> كملف CSV أو نسخ ولصق الأسطر هنا. سيقوم النظام بقراءة الأعمدة وتعيينها تلقائياً.
+        </p>
+
+        <!-- Dropzone / File Picker -->
+        <div class="csv-dropzone" id="csvDropzone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="dropzone-icon">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          <p class="dropzone-text">اسحب وأفلت ملف CSV هنا أو <label class="file-browse-link"><input type="file" id="csvFileInput" accept=".csv,text/csv">تصفح الملفات من جهازك</label></p>
+          <span class="dropzone-hint">يدعم الملفات بصيغة UTF-8 الصادرة من فيسبوك ولينكد إن وجوجل</span>
+        </div>
+
+        <div class="divider-text">أو قم بلصق نص الـ CSV مباشرة</div>
+
+        <div class="form-group">
+          <label for="csvRawText">نص CSV المباشر:</label>
+          <textarea id="csvRawText" rows="5" class="form-textarea font-mono" placeholder="name,phone,email,business_name,website_type,budget,campaign_name&#10;محمد علي,201011223344,m@test.com,عيادة الحياة,corporate,12000,حملة عيادات ومراكز طبية&#10;سارة أحمد,201122334455,sara@test.com,متجر كاندي,ecommerce,16000,حملة المتاجر الإلكترونية"></textarea>
+        </div>
+
+        <!-- Sample format help -->
+        <div class="csv-sample-help">
+          <button type="button" class="btn-sample" id="btnFillSampleCsv">💡 تجربة بيانات تجريبية جاهزة</button>
+        </div>
+
+        <!-- Preview Box -->
+        <div class="csv-preview-container hidden" id="csvPreviewBox">
+          <h4 class="preview-title">معاينة البيانات المراد استيرادها (<span id="csvParsedCount">0</span> عميل):</h4>
+          <div class="preview-table-wrap">
+            <table class="compact-table" id="csvPreviewTable">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الهاتف</th>
+                  <th>النشاط التجاري</th>
+                  <th>نوع الموقع</th>
+                  <th>الميزانية</th>
+                  <th>الحملة</th>
+                </tr>
+              </thead>
+              <tbody id="csvPreviewTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCancelCsv">إلغاء</button>
+        <button type="button" class="btn btn-emerald" id="btnExecuteImport" disabled>بدء الاستيراد للسيستم</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: WON CONFIRMATION (COLLECT DEPOSIT) -->
+  <div class="modal-overlay" id="wonModalOverlay">
+    <div class="modal-box modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title text-emerald">🎉 إغلاق الصفقة بنجاح</h3>
+        <button class="modal-close" id="btnCloseWonModal">&times;</button>
+      </div>
+      <form id="wonForm" class="modal-body">
+        <p class="modal-instruction">ألف مبروك! يرجى إدخال مبلغ العربون الذي تم تحويله وتأكيده من العميل لبدء المشروع:</p>
+        <div class="form-group">
+          <label for="wonDepositAmount">قيمة العربون المحصل (ج.م) <span class="required">*</span></label>
+          <input type="number" id="wonDepositAmount" required min="1" class="form-input text-emerald font-bold" placeholder="مثال: 5000">
+        </div>
+        <div class="form-group">
+          <label for="wonPaymentNote">طريقة الدفع / ملاحظة التحويل</label>
+          <input type="text" id="wonPaymentNote" class="form-input" placeholder="فودافون كاش / إنستاباي / تحويل بنكي">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelWon">إلغاء</button>
+          <button type="submit" class="btn btn-emerald" id="btnConfirmWon">تأكيد إغلاق الصفقة ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: LOST CONFIRMATION (REASON) -->
+  <div class="modal-overlay" id="lostModalOverlay">
+    <div class="modal-box modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title text-rose">تأجيل أو خسارة الصفقة</h3>
+        <button class="modal-close" id="btnCloseLostModal">&times;</button>
+      </div>
+      <form id="lostForm" class="modal-body">
+        <p class="modal-instruction">يرجى تحديد سبب عدم إتمام الصفقة لمساعدتنا في تحسين حملات ميتا المستقبلية:</p>
+        <div class="form-group">
+          <label for="lostReasonSelect">سبب عدم الإغلاق</label>
+          <select id="lostReasonSelect" class="form-select">
+            <option value="السعر أعلى من الميزانية">السعر أعلى من الميزانية</option>
+            <option value="العميل غير جاد أو لم يعد يرد">العميل غير جاد أو توقف عن الرد</option>
+            <option value="تأجيل المشروع لبداية الشهر القادم">تأجيل المشروع لبداية الشهر القادم</option>
+            <option value="اختار منافس آخر">اختار وكالة أخرى / منافس</option>
+            <option value="عدم توفر متطلبات تقنية معينة">عدم توفر متطلبات تقنية معينة</option>
+            <option value="سبب آخر">سبب آخر</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="lostCustomReason">تفاصيل إضافية</label>
+          <input type="text" id="lostCustomReason" class="form-input" placeholder="اكتب توضيح إضافي إن وجد...">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelLost">إلغاء</button>
+          <button type="submit" class="btn btn-rose" id="btnConfirmLost">تأكيد الخسارة / التأجيل</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main JavaScript App -->
+  <script src="app.js"></script>
+</body>
+</html>

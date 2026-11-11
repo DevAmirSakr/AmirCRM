@@ -1,0 +1,398 @@
+{
+  "leads": [
+    {
+      "id": "lead_1",
+      "name": "أحمد محمود الشرقاوي",
+      "phone": "201012345678",
+      "email": "ahmed.sharkawy@gmail.com",
+      "business_name": "براند أزياء كاجوال (Sharkawy Wear)",
+      "website_type": "ecommerce",
+      "stage": "new",
+      "priority": "high",
+      "campaign_name": "حملة متاجر إلكترونية - ميتا",
+      "ad_source": "meta_form",
+      "budget": 15000,
+      "deal_value": 18000,
+      "deposit_paid": 0,
+      "requirements": [
+        "domain_hosting",
+        "payment_gateway",
+        "meta_pixel",
+        "shipping_integration"
+      ],
+      "notes": "يرغب في متجر متكامل مربوط ببوابة دفع فيزا وماستركارد وفودافون كاش وشركة شحن بوسطة",
+      "next_followup_at": "2026-11-11T17:13:53.856Z",
+      "last_contacted_at": "2026-11-11T18:13:53.856Z",
+      "lost_reason": "",
+      "created_at": "2026-11-11T09:13:53.856Z",
+      "updated_at": "2026-11-11T18:13:53.856Z"
+    },
+    {
+      "id": "lead_2",
+      "name": "سارة عبد الرحمن",
+      "phone": "201198765432",
+      "email": "sara.beauty@outlook.com",
+      "business_name": "مركز سارة كوزمتكس وسبا",
+      "website_type": "landing",
+      "stage": "new",
+      "priority": "medium",
+      "campaign_name": "حملة صفحات هبوط سريعة - ميتا",
+      "ad_source": "instagram_dm",
+      "budget": 6000,
+      "deal_value": 7000,
+      "deposit_paid": 0,
+      "requirements": [
+        "domain_hosting",
+        "contact_form",
+        "meta_pixel"
+      ],
+      "notes": "صفحة هبوط لعروض نهاية العام مع نموذج حجز وربط واتساب وبيكسل إنستغرام",
+      "next_followup_at": "2026-11-11T03:13:53.856Z",
+      "last_contacted_at": "2026-11-11T05:13:53.856Z",
+      "lost_reason": "",
+      "created_at": "2026-11-11T01:13:53.856Z",
+      "updated_at": "2026-11-11T05:13:53.856Z"
+    },
+    {
+      "id": "lead_3",
+      "name": "المهندس شريف فاروق",
+      "phone": "201234567890",
+      "email": "sherif@farouk-consulting.com",
+      "business_name": "فاروق للاستشارات الهندسية والمقاولات",
+      "website_type": "corporate",
+      "stage": "contacted",
+      "priority": "medium",
+      "campaign_name": "حملة الشركات والمؤسسات - ميتا",
+      "ad_source": "meta_form",
+      "budget": 12000,
+      "deal_value": 15000,
+      "deposit_paid": 0,
+      "requirements": [
+        "domain_hosting",
+        "multilingual",
+        "portfolio_gallery",
+        "corporate_email"
+      ],
+      "notes": "موقع تعريفي ثنائي اللغة (عربي وإنجليزي) مع معرض سابقة أعمال وإيميلات رسمية",
+      "next_followup_at": "2026-11-11T20:13:53.856Z",
+      "last_contacted_at": "2026-11-11T16:13:53.856Z",
+      "lost_reason": "",
+      "created_at": "2026-11-10T17:13:53.856Z",
+      "updated_at": "2026-11-11T16:13:53.856Z"
+    },
+    {
+      "id": "lead_4",
+      "name": "الدكتور كريم الحسيني",
+      "phone": "201099887766",
+      "email": "dr.karim@dentalcare-eg.com",
+      "business_name": "عيادات النخبة لطب وتجميل الأسنان",
+      "website_type": "booking",
+      "stage": "discovery",
+      "priority": "high",
+      "campaign_name": "حملة العيادات والحجوزات - ميتا",
+      "ad_source": "whatsapp_ad",
+      "budget": 10000,
+      "deal_value": 12000,
+      "deposit_paid": 0,
+      "requirements": [
+        "domain_hosting",
+        "booking_system",
+        "whatsapp_chat",
+        "google_reviews"
+      ],
+      "notes": "نظام حجز مواعيد للأطباء وربط فروع الشيخ زايد والتجمع الخامس وتأكيد الحجز عبر واتساب",
+      "next_followup_at": "2026-11-13T21:13:53.856Z",
+      "last_contacted_at": "2026-11-11T13:13:53.856Z",
+      "lost_reason": "",
+      "created_at": "2026-11-09T21:13:53.856Z",
+      "updated_at": "2026-11-11T13:13:53.856Z"
+    },
+    {
+      "id": "lead_5",
+      "name": "طارق زياد",
+      "phone": "201501234987",
+      "email": "tarek@oudroyale.com",
+      "business_name": "رويال للعود والعطور الشرقية",
+      "website_type": "ecommerce",
+      "stage": "proposal",
+      "priority": "high",
+      "campaign_name": "حملة متاجر إلكترونية - ميتا",
+      "ad_source": "meta_form",
+      "budget": 18000,
+      "deal_value": 20000,
+      "deposit_paid": 0,
+      "requirements": [
+        "domain_hosting",
+        "payment_gateway",
+        "shipping_integration",
+        "inventory_sync",
+        "meta_pixel"
+      ],
+      "notes": "تم تجهيز وإرسال العرض الفني والمالي مع خطة التسليم خلال 14 يوم عمل",
+      "next_followup_at": "2026-11-14T21:13:53.856Z",
+      "last_contacted_at": "2026-11-11T15:13:53.856Z",
+      "lost_reason": "",
+      "created_at": "2026-11-08T21:13:53.856Z",
+      "updated_at": "2026-11-11T15:13:53.856Z"
+    },
+    {
+      "id": "lead_6",
+      "name": "عمر خالد الدسوقي",
+      "phone": "201122334455",
+      "email": "omar@edunext-eg.org",
+      "business_name": "منصة إديونكست للتدريب والأكورسات",
+      "website_type": "custom",
+      "stage": "negotiation",
+      "priority": "high",
+      "campaign_name": "حملة الحلول البرمجية والمواقع الخاصة",
+      "ad_source": "whatsapp_ad",
+      "budget": 15000,
+      "deal_value": 13000,
+      "deposit_paid": 0,
+      "requirements": [
+        "domain_hosting",
+        "custom_backend",
+        "payment_gateway",
+        "video_protection",
+        "certificates"
+      ],
+      "notes": "مفاوضات بخصوص خطة الدفع على دفعتين وتضمين حماية الفيديوهات وإصدار الشهادات التلقائية",
+      "next_followup_at": "2026-11-15T21:13:53.856Z",
+      "last_contacted_at": "2026-11-11T19:13:53.856Z",
+      "lost_reason": "",
+      "created_at": "2026-11-07T21:13:53.856Z",
+      "updated_at": "2026-11-11T19:13:53.856Z"
+    },
+    {
+      "id": "lead_7",
+      "name": "مصطفى إبراهيم الغامدي",
+      "phone": "201087654321",
+      "email": "mostafa@alghamdihome.com",
+      "business_name": "مفروشات وأثاث الغامدي هوم",
+      "website_type": "ecommerce",
+      "stage": "won",
+      "priority": "high",
+      "campaign_name": "حملة متاجر إلكترونية - ميتا",
+      "ad_source": "meta_form",
+      "budget": 20000,
+      "deal_value": 22000,
+      "deposit_paid": 11000,
+      "requirements": [
+        "domain_hosting",
+        "payment_gateway",
+        "shipping_integration",
+        "erp_integration",
+        "meta_pixel"
+      ],
+      "notes": "تم التعاقد ودفع عربون 50% (11,000 ج.م). العمل جاري على تصميم الواجهات الأولية",
+      "next_followup_at": null,
+      "last_contacted_at": "2026-11-11T11:13:53.856Z",
+      "lost_reason": "",
+      "created_at": "2026-11-06T21:13:53.856Z",
+      "updated_at": "2026-11-11T11:13:53.856Z"
+    },
+    {
+      "id": "lead_8",
+      "name": "حسام الدين سمير",
+      "phone": "201200112233",
+      "email": "hossam@alrawad-logistics.com",
+      "business_name": "الرواد لخدمات الشحن الدولي والتخليص",
+      "website_type": "corporate",
+      "stage": "lost",
+      "priority": "low",
+      "campaign_name": "حملة الشركات والمؤسسات - ميتا",
+      "ad_source": "meta_form",
+      "budget": 8000,
+      "deal_value": 14000,
+      "deposit_paid": 0,
+      "requirements": [
+        "domain_hosting",
+        "corporate_email",
+        "tracking_system"
+      ],
+      "notes": "طلب نظام تتبع شحنات متكامل مع موقع تعريفي بميزانية منخفضة جداً",
+      "next_followup_at": null,
+      "last_contacted_at": "2026-11-10T21:13:53.856Z",
+      "lost_reason": "الميزانية غير كافية وقرر تأجيل المشروع للربع القادم",
+      "created_at": "2026-11-05T21:13:53.856Z",
+      "updated_at": "2026-11-10T21:13:53.856Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": "act_1_1",
+      "lead_id": "lead_1",
+      "type": "system",
+      "summary": "وصل العميل تلقائياً من إعلان ميتا (Meta Lead Ads Webhook)",
+      "created_at": "2026-11-11T09:13:53.856Z"
+    },
+    {
+      "id": "act_1_2",
+      "lead_id": "lead_1",
+      "type": "whatsapp",
+      "summary": "تم إرسال رسالة ترحيبية عبر واتساب تتضمن نماذج متاجر ملابس سابقة ومميزات الربط مع شركات الشحن",
+      "created_at": "2026-11-11T18:13:53.856Z"
+    },
+    {
+      "id": "act_2_1",
+      "lead_id": "lead_2",
+      "type": "system",
+      "summary": "تم استلام الطلب عبر رسائل إنستغرام الخاصة بالإعلان",
+      "created_at": "2026-11-11T01:13:53.856Z"
+    },
+    {
+      "id": "act_2_2",
+      "lead_id": "lead_2",
+      "type": "note",
+      "summary": "العميلة ترغب بإطلاق صفحة الهبوط قبل نهاية الشهر وتطلب التركيز على سرعة التحميل وتكامل الموبايل",
+      "created_at": "2026-11-11T05:13:53.856Z"
+    },
+    {
+      "id": "act_3_1",
+      "lead_id": "lead_3",
+      "type": "system",
+      "summary": "تم إضافة العميل من نموذج إعلانات ميتا",
+      "created_at": "2026-11-10T17:13:53.856Z"
+    },
+    {
+      "id": "act_3_2",
+      "lead_id": "lead_3",
+      "type": "call",
+      "summary": "مكالمة هاتفية أولى لمناقشة هوية الشركة والمشاريع المعمارية السابقة المطلوب عرضها",
+      "created_at": "2026-11-11T16:13:53.856Z"
+    },
+    {
+      "id": "act_3_3",
+      "lead_id": "lead_3",
+      "type": "stage_change",
+      "summary": "تم تغيير مرحلة العميل إلى: تم التواصل الأول",
+      "created_at": "2026-11-11T16:13:53.856Z"
+    },
+    {
+      "id": "act_4_1",
+      "lead_id": "lead_4",
+      "type": "system",
+      "summary": "بدء المحادثة عبر إعلان واتساب لحملة العيادات",
+      "created_at": "2026-11-09T21:13:53.856Z"
+    },
+    {
+      "id": "act_4_2",
+      "lead_id": "lead_4",
+      "type": "meeting",
+      "summary": "اجتماع زووم لاستعراض آلية حجز المواعيد وإرسال إشعارات التذكير التلقائية للمرضى",
+      "created_at": "2026-11-11T13:13:53.856Z"
+    },
+    {
+      "id": "act_4_3",
+      "lead_id": "lead_4",
+      "type": "stage_change",
+      "summary": "تم تغيير مرحلة العميل إلى: استكشاف المتطلبات",
+      "created_at": "2026-11-11T13:13:53.856Z"
+    },
+    {
+      "id": "act_5_1",
+      "lead_id": "lead_5",
+      "type": "system",
+      "summary": "تسجيل العميل عبر إعلان ميتا لحملة المتاجر",
+      "created_at": "2026-11-08T21:13:53.856Z"
+    },
+    {
+      "id": "act_5_2",
+      "lead_id": "lead_5",
+      "type": "call",
+      "summary": "مكالمة تفصيلية لحصر عدد المنتجات وخيارات الشحن والتغليف المخصصة للعطور",
+      "created_at": "2026-11-10T21:13:53.856Z"
+    },
+    {
+      "id": "act_5_3",
+      "lead_id": "lead_5",
+      "type": "proposal",
+      "summary": "إرسال ملف عرض السعر الفني والمالي (PDF) بقيمة 20,000 ج.م يشمل بوابات الدفع وسياسة الشحن",
+      "created_at": "2026-11-11T15:13:53.856Z"
+    },
+    {
+      "id": "act_5_4",
+      "lead_id": "lead_5",
+      "type": "stage_change",
+      "summary": "تم تغيير مرحلة العميل إلى: إرسال العرض المالي والفني",
+      "created_at": "2026-11-11T15:13:53.856Z"
+    },
+    {
+      "id": "act_6_1",
+      "lead_id": "lead_6",
+      "type": "system",
+      "summary": "طلب وارد من حملة المنصات المتخصصة عبر واتساب",
+      "created_at": "2026-11-07T21:13:53.856Z"
+    },
+    {
+      "id": "act_6_2",
+      "lead_id": "lead_6",
+      "type": "proposal",
+      "summary": "تقديم عرض السعر المبدئي بقيمة 15,000 ج.م مع خطة التسليم",
+      "created_at": "2026-11-10T15:13:53.856Z"
+    },
+    {
+      "id": "act_6_3",
+      "lead_id": "lead_6",
+      "type": "call",
+      "summary": "تفاوض على الخصم وتقديم عرض خاص معتمد بقيمة 13,000 ج.م مقابل التعاقد هذا الأسبوع",
+      "created_at": "2026-11-11T19:13:53.856Z"
+    },
+    {
+      "id": "act_6_4",
+      "lead_id": "lead_6",
+      "type": "stage_change",
+      "summary": "تم تغيير مرحلة العميل إلى: مفاوضات وتعديل العرض",
+      "created_at": "2026-11-11T19:13:53.856Z"
+    },
+    {
+      "id": "act_7_1",
+      "lead_id": "lead_7",
+      "type": "system",
+      "summary": "تسجيل العميل عبر نموذج إعلان ميتا",
+      "created_at": "2026-11-06T21:13:53.856Z"
+    },
+    {
+      "id": "act_7_2",
+      "lead_id": "lead_7",
+      "type": "proposal",
+      "summary": "إرسال العقد وعرض السعر المعتمد بقيمة 22,000 ج.م",
+      "created_at": "2026-11-09T21:13:53.856Z"
+    },
+    {
+      "id": "act_7_3",
+      "lead_id": "lead_7",
+      "type": "whatsapp",
+      "summary": "تأكيد استلام تحويل العربون البنكي (11,000 ج.م) والبدء في التصاميم الأولية",
+      "created_at": "2026-11-11T11:13:53.856Z"
+    },
+    {
+      "id": "act_7_4",
+      "lead_id": "lead_7",
+      "type": "stage_change",
+      "summary": "تم إغلاق الصفقة بنجاح وتم تحصيل عربون بقيمة 11,000 ج.م",
+      "created_at": "2026-11-11T11:13:53.856Z"
+    },
+    {
+      "id": "act_8_1",
+      "lead_id": "lead_8",
+      "type": "system",
+      "summary": "تسجيل العميل عبر إعلان ميتا",
+      "created_at": "2026-11-05T21:13:53.856Z"
+    },
+    {
+      "id": "act_8_2",
+      "lead_id": "lead_8",
+      "type": "call",
+      "summary": "مكالمة هاتفية لمناقشة المتطلبات والميزانية المتاحة للمشروع",
+      "created_at": "2026-11-10T05:13:53.856Z"
+    },
+    {
+      "id": "act_8_3",
+      "lead_id": "lead_8",
+      "type": "stage_change",
+      "summary": "تم نقل العميل إلى مرحلة خاسرة/مؤجلة. السبب: الميزانية غير كافية وقرر تأجيل المشروع للربع القادم",
+      "created_at": "2026-11-10T21:13:53.856Z"
+    }
+  ]
+}
