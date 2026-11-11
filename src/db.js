@@ -15,6 +15,7 @@ const STAGE_LABELS = {
 };
 
 const WEBSITE_TYPE_LABELS = {
+  unspecified: 'غير محدد بعد / قيد التأكيد',
   ecommerce: 'متجر إلكتروني',
   corporate: 'موقع تعريفي لشركة',
   landing: 'صفحة هبوط تسويقية',
@@ -532,7 +533,7 @@ function createLead(leadData) {
     social_handle: leadData.social_handle ? String(leadData.social_handle).trim() : '',
     email: leadData.email ? String(leadData.email).trim() : '',
     business_name: leadData.business_name ? String(leadData.business_name).trim() : '',
-    website_type: leadData.website_type || 'landing',
+    website_type: leadData.website_type || 'unspecified',
     stage: leadData.stage || 'new',
     priority: leadData.priority || 'medium',
     campaign_name: leadData.campaign_name ? String(leadData.campaign_name).trim() : 'حملة إعلانات ميتا - طلب موقع',
@@ -770,6 +771,7 @@ function getAnalytics() {
   };
 
   const by_website_type = {
+    unspecified: 0,
     ecommerce: 0,
     corporate: 0,
     landing: 0,

@@ -42,6 +42,7 @@ const STAGES = {
 };
 
 const WEBSITE_TYPES = {
+  unspecified: 'غير محدد بعد / قيد التأكيد',
   ecommerce: 'متجر إلكتروني',
   corporate: 'موقع تعريفي لشركة',
   landing: 'صفحة هبوط (Landing Page)',
@@ -146,6 +147,24 @@ function formatRelativeTime(dateStr) {
   }
 }
 
+function toDateTimeLocalValue(dateInput) {
+  if (!dateInput) return '';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) {
+    if (typeof dateInput === 'string' && dateInput.length >= 16) {
+      return dateInput.slice(0, 16);
+    }
+    return '';
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 function getFollowupStatus(dateStr, stage) {
   if (!dateStr || stage === 'won' || stage === 'lost') {
     return null;
@@ -154,18 +173,28 @@ function getFollowupStatus(dateStr, stage) {
   const now = new Date();
   if (isNaN(target.getTime())) return null;
 
-  // strip hours for day comparison
   const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
   const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  if (target < now && targetDay < nowDay) {
-    return { type: 'overdue', label: 'متأخرة ⚠️', class: 'followup-overdue' };
+  const timeStr = target.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  if (target < now) {
+    const isToday = targetDay.getTime() === nowDay.getTime();
+    return {
+      type: 'overdue',
+      label: `متأخرة ⚠️ (${isToday ? timeStr : target.toLocaleDateString('ar-EG', { month: 'numeric', day: 'numeric' })})`,
+      class: 'followup-overdue'
+    };
   } else if (targetDay.getTime() === nowDay.getTime()) {
-    return { type: 'today', label: 'مستحقة اليوم 🔔', class: 'followup-today' };
+    return {
+      type: 'today',
+      label: `مستحقة اليوم (${timeStr})`,
+      class: 'followup-today'
+    };
   } else {
     return {
       type: 'future',
-      label: target.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }),
+      label: `${target.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })} (${timeStr})`,
       class: 'followup-future'
     };
   }
@@ -644,6 +673,8 @@ function createKanbanCard(lead) {
   }
 
   const cleanPhone = cleanPhoneNumber(lead.phone);
+  const hasSocial = Boolean(lead.social_handle && lead.social_handle.trim());
+  const hasContact = Boolean(cleanPhone || hasSocial);
   const waUrl = `https://wa.me/${cleanPhone}`;
 
   card.innerHTML = `
@@ -651,7 +682,8 @@ function createKanbanCard(lead) {
       <div>
         <div class="card-client-name">${escapeHtml(lead.name)}</div>
         <div class="card-business-name">${escapeHtml(lead.business_name || 'بدون اسم نشاط')}</div>
-        ${lead.social_handle ? `<div class="card-social-tag" title="اسم الحساب / يوزر">💬 ${escapeHtml(lead.social_handle)}</div>` : ''}
+        ${hasSocial ? `<div class="card-social-tag" title="اسم الحساب / يوزر">💬 ${escapeHtml(lead.social_handle)}</div>` : ''}
+        ${!hasContact ? `<div class="card-no-contact-tag" title="لا يوجد رقم هاتف أو حساب تواصل مسجل">⚠️ بدون وسيلة تواصل</div>` : ''}
       </div>
       <span class="card-priority-tag ${priorityMeta.class}">${priorityMeta.label}</span>
     </div>
@@ -682,6 +714,14 @@ function createKanbanCard(lead) {
         </span>
       `}
 
+      <button type="button" class="btn-card-contact" onclick="event.stopPropagation(); handleQuickContacted('${lead.id}');" title="تسجيل تم التواصل وتحديث تاريخ آخر تواصل">
+        📞 تواصل
+      </button>
+
+      <button type="button" class="btn-card-details" onclick="event.stopPropagation(); openLeadDrawer('${lead.id}');" title="عرض تفاصيل العميل والنشاطات">
+        👁️ تفاصيل
+      </button>
+
       <select class="card-quick-stage-select" onclick="event.stopPropagation();" onchange="handleCardQuickStageChange('${lead.id}', this.value)">
         <option value="new" ${lead.stage === 'new' ? 'selected' : ''}>عميل جديد</option>
         <option value="contacted" ${lead.stage === 'contacted' ? 'selected' : ''}>تواصل</option>
@@ -694,7 +734,11 @@ function createKanbanCard(lead) {
     </div>
   `;
 
-  card.addEventListener('click', () => openLeadDrawer(lead.id));
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('button, a, select, input, label, .card-footer-actions')) return;
+    if (card.classList.contains('dragging')) return;
+    openLeadDrawer(lead.id);
+  });
   return card;
 }
 
@@ -812,6 +856,8 @@ function renderTable() {
     }
 
     const cleanPhone = cleanPhoneNumber(lead.phone);
+    const hasSocial = Boolean(lead.social_handle && lead.social_handle.trim());
+    const hasContact = Boolean(cleanPhone || hasSocial);
     const waUrl = `https://wa.me/${cleanPhone}`;
 
     tr.innerHTML = `
@@ -823,8 +869,9 @@ function renderTable() {
       </td>
       <td>
         <div style="display: flex; flex-direction: column;">
-          <span class="table-phone">${escapeHtml(lead.phone || 'غير مسجل')}</span>
-          ${lead.social_handle ? `<span class="table-social-handle" title="اسم الحساب">💬 ${escapeHtml(lead.social_handle)}</span>` : ''}
+          ${cleanPhone ? `<span class="table-phone">${escapeHtml(lead.phone)}</span>` : ''}
+          ${hasSocial ? `<span class="table-social-handle" title="اسم الحساب">💬 ${escapeHtml(lead.social_handle)}</span>` : ''}
+          ${!hasContact ? `<span class="badge-no-contact-table" title="لا يوجد هاتف أو حساب للتواصل">⚠️ بدون وسيلة تواصل</span>` : ''}
           ${lead.email ? `<span style="font-size: 0.74rem; color: var(--ink-500);">${escapeHtml(lead.email)}</span>` : ''}
         </div>
       </td>
@@ -858,6 +905,9 @@ function renderTable() {
         <div class="table-actions">
           <button class="btn-table-action" onclick="openLeadDrawer('${lead.id}')" title="عرض التفاصيل">
             👁️ فتح
+          </button>
+          <button class="btn-table-action" onclick="handleQuickContacted('${lead.id}')" style="color: #1d4ed8; border-color: #bfdbfe;" title="تسجيل تم التواصل وتحديث تاريخ آخر تواصل">
+            📞 تواصل
           </button>
           ${cleanPhone ? `
             <a href="${waUrl}" target="_blank" class="btn-table-action" style="color: #059669; border-color: #a7f3d0;" title="محادثة واتساب">
@@ -1102,7 +1152,7 @@ function populateLeadSpecs(lead) {
   if (pWarn) pWarn.classList.add('hidden');
   if (sWarn) sWarn.classList.add('hidden');
   document.getElementById('editBusinessName').value = lead.business_name || '';
-  document.getElementById('editWebsiteType').value = lead.website_type || 'ecommerce';
+  document.getElementById('editWebsiteType').value = lead.website_type || 'unspecified';
   document.getElementById('editStage').value = lead.stage || 'new';
   document.getElementById('editPriority').value = lead.priority || 'medium';
   document.getElementById('editAdSource').value = lead.ad_source || 'meta_form';
@@ -1112,17 +1162,11 @@ function populateLeadSpecs(lead) {
   document.getElementById('editDepositPaid').value = lead.deposit_paid || 0;
   document.getElementById('editNotes').value = lead.notes || '';
 
-  if (lead.next_followup_at) {
-    try {
-      const d = new Date(lead.next_followup_at);
-      const iso = d.toISOString().slice(0, 16);
-      document.getElementById('editNextFollowup').value = iso;
-    } catch (e) {
-      document.getElementById('editNextFollowup').value = '';
-    }
-  } else {
-    document.getElementById('editNextFollowup').value = '';
-  }
+  document.getElementById('editNextFollowup').value = toDateTimeLocalValue(lead.next_followup_at);
+
+  const hasContact = Boolean(cleanPhoneNumber(lead.phone) || (lead.social_handle && lead.social_handle.trim()));
+  const drawerWarn = document.getElementById('drawerNoContactWarning');
+  if (drawerWarn) drawerWarn.classList.toggle('hidden', hasContact);
 
   // Requirements checkboxes
   const reqChips = document.querySelectorAll('#requirementsChips input[name="requirements"]');
@@ -1481,6 +1525,147 @@ function parseCsvLine(text) {
 }
 
 // ============================================================================
+// Quick Contacted Action
+// ============================================================================
+async function handleQuickContacted(leadId) {
+  try {
+    const lead = state.leads.find((l) => l.id === leadId) || (state.selectedLead && state.selectedLead.id === leadId ? state.selectedLead : null);
+    if (!lead) return;
+
+    const updates = {
+      last_contacted_at: new Date().toISOString()
+    };
+
+    // If still in 'new' stage, automatically advance to 'contacted'
+    if (lead.stage === 'new') {
+      updates.stage = 'contacted';
+    }
+
+    await apiUpdateLead(leadId, updates);
+
+    // Document activity in timeline
+    await apiAddActivity(leadId, {
+      type: 'call',
+      summary: updates.stage === 'contacted'
+        ? 'تم تسجيل التواصل مع العميل بنجاح ونقله إلى مرحلة التواصل المبدئي'
+        : 'تم تسجيل التواصل مع العميل وتحديث تاريخ آخر تواصل'
+    });
+
+    showToast(`تم تسجيل التواصل مع ${lead.name} بنجاح! 📞`, 'success');
+    await refreshData();
+
+    // If drawer is open for this lead, refresh its content
+    if (state.selectedLead && state.selectedLead.id === leadId) {
+      const fresh = await apiGetLead(leadId);
+      state.selectedLead = fresh.lead;
+      state.selectedLeadActivities = fresh.activities || [];
+      renderDrawerHeader(fresh.lead);
+      renderStageStepper(fresh.lead.stage);
+      renderActivityTimeline(state.selectedLeadActivities);
+      populateLeadSpecs(fresh.lead);
+    }
+  } catch (err) {
+    console.error('Error in handleQuickContacted:', err);
+    showToast('حدث خطأ أثناء تسجيل التواصل: ' + (err.message || ''), 'error');
+  }
+}
+
+// ============================================================================
+// Export Leads to Excel (CSV with UTF-8 BOM)
+// ============================================================================
+function exportLeadsToExcel() {
+  const leads = state.leads && state.leads.length > 0 ? state.leads : [];
+  if (leads.length === 0) {
+    showToast('لا توجد بيانات عملاء لتصديرها', 'warning');
+    return;
+  }
+
+  const headers = [
+    'م',
+    'اسم العميل',
+    'رقم الهاتف / الواتساب',
+    'يوزر / اسم الحساب',
+    'البريد الإلكتروني',
+    'اسم النشاط التجاري',
+    'نوع الموقع المطلوب',
+    'المرحلة الحالية',
+    'أولوية المتابعة',
+    'مصدر الإعلان',
+    'اسم الحملة الإعلانية',
+    'الميزانية التقديرية (ج.م)',
+    'قيمة الصفقة (ج.م)',
+    'العربون المدفوع (ج.م)',
+    'المبلغ المتبقي (ج.م)',
+    'موعد المتابعة القادم',
+    'تاريخ آخر تواصل',
+    'الملاحظات',
+    'تاريخ التسجيل'
+  ];
+
+  const formatCsvCell = (val) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  const rows = leads.map((lead, index) => {
+    const siteLabel = WEBSITE_TYPES[lead.website_type] || lead.website_type || 'غير محدد';
+    const stageLabel = (STAGES[lead.stage] && STAGES[lead.stage].label) || lead.stage || '';
+    const priorityLabel = (PRIORITIES[lead.priority] && PRIORITIES[lead.priority].label) || lead.priority || '';
+    const sourceLabel = AD_SOURCES[lead.ad_source] || lead.ad_source || '';
+    const dealVal = Number(lead.deal_value || lead.budget || 0);
+    const deposit = Number(lead.deposit_paid || 0);
+    const remaining = Math.max(0, dealVal - deposit);
+
+    const followupStr = lead.next_followup_at
+      ? new Date(lead.next_followup_at).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
+      : '';
+    const contactedStr = lead.last_contacted_at
+      ? new Date(lead.last_contacted_at).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
+      : '';
+    const createdStr = lead.created_at
+      ? new Date(lead.created_at).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
+      : '';
+
+    return [
+      index + 1,
+      formatCsvCell(lead.name),
+      formatCsvCell(lead.phone ? `'${lead.phone}` : ''),
+      formatCsvCell(lead.social_handle || ''),
+      formatCsvCell(lead.email || ''),
+      formatCsvCell(lead.business_name || ''),
+      formatCsvCell(siteLabel),
+      formatCsvCell(stageLabel),
+      formatCsvCell(priorityLabel),
+      formatCsvCell(sourceLabel),
+      formatCsvCell(lead.campaign_name || ''),
+      dealVal,
+      dealVal,
+      deposit,
+      remaining,
+      formatCsvCell(followupStr),
+      formatCsvCell(contactedStr),
+      formatCsvCell(lead.notes || ''),
+      formatCsvCell(createdStr)
+    ].join(',');
+  });
+
+  const csvContent = '\uFEFF' + [headers.map((h) => `"${h}"`).join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `AmirCRM_Leads_${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast(`تم تصدير ${leads.length} عميل إلى ملف Excel بنجاح! 📊`, 'success');
+}
+
+// ============================================================================
 // Event Listeners & Initialization
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1600,6 +1785,11 @@ function initEventListeners() {
     btnToggleDue?.classList.remove('active');
     btnToggleOverdue?.classList.remove('active');
     refreshData();
+  });
+
+  // Export Leads to Excel
+  document.getElementById('btnExportExcel')?.addEventListener('click', () => {
+    exportLeadsToExcel();
   });
 
   // Webhook Meta Simulator
@@ -1783,6 +1973,13 @@ function initEventListeners() {
       const targetStep = btn.dataset.step;
       requestStageTransition(state.selectedLead.id, targetStep);
     });
+  });
+
+  // Quick Contacted Button in Drawer Header
+  document.getElementById('btnDrawerQuickContact')?.addEventListener('click', async () => {
+    if (state.selectedLead) {
+      await handleQuickContacted(state.selectedLead.id);
+    }
   });
 
   // Quick Won / Lost Buttons in Drawer Header
