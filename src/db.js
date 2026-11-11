@@ -456,6 +456,9 @@ function getLeads(filters = {}) {
   if (filters.stage) {
     list = list.filter(l => l.stage === filters.stage);
   }
+  if (filters.campaign) {
+    list = list.filter(l => l.campaign_name === filters.campaign);
+  }
   if (filters.website_type) {
     list = list.filter(l => l.website_type === filters.website_type);
   }
@@ -470,18 +473,33 @@ function getLeads(filters = {}) {
     list = list.filter(l => {
       const name = (l.name || '').toLowerCase();
       const phone = (l.phone || '').toLowerCase();
+      const social = (l.social_handle || '').toLowerCase();
       const bname = (l.business_name || '').toLowerCase();
       const cname = (l.campaign_name || '').toLowerCase();
       const notes = (l.notes || '').toLowerCase();
-      return name.includes(term) || phone.includes(term) || bname.includes(term) || cname.includes(term) || notes.includes(term);
+      return name.includes(term) || phone.includes(term) || social.includes(term) || bname.includes(term) || cname.includes(term) || notes.includes(term);
     });
   }
-  if (filters.followup === 'due') {
+  if (filters.followup) {
     const now = new Date();
     list = list.filter(l => {
       if (l.stage === 'won' || l.stage === 'lost') return false;
       if (!l.next_followup_at) return false;
-      return new Date(l.next_followup_at) <= now;
+      const target = new Date(l.next_followup_at);
+      if (isNaN(target.getTime())) return false;
+
+      if (filters.followup === 'overdue') {
+        return target < now;
+      }
+      if (filters.followup === 'today') {
+        const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+        const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return targetDay.getTime() === nowDay.getTime();
+      }
+      if (filters.followup === 'due') {
+        return target <= now || target.toDateString() === now.toDateString();
+      }
+      return true;
     });
   }
 
@@ -511,6 +529,7 @@ function createLead(leadData) {
     id,
     name: leadData.name ? String(leadData.name).trim() : 'عميل جديد',
     phone: leadData.phone ? String(leadData.phone).trim() : '',
+    social_handle: leadData.social_handle ? String(leadData.social_handle).trim() : '',
     email: leadData.email ? String(leadData.email).trim() : '',
     business_name: leadData.business_name ? String(leadData.business_name).trim() : '',
     website_type: leadData.website_type || 'landing',
@@ -737,6 +756,8 @@ function getAnalytics() {
   let won_revenue = 0;
   let deposits_collected = 0;
   let due_followups_count = 0;
+  let overdue_followups_count = 0;
+  let today_followups_count = 0;
 
   const by_stage = {
     new: 0,
@@ -789,8 +810,19 @@ function getAnalytics() {
 
     // Due followups check
     if (lead.stage !== 'won' && lead.stage !== 'lost' && lead.next_followup_at) {
-      if (new Date(lead.next_followup_at) <= now) {
-        due_followups_count++;
+      const fDate = new Date(lead.next_followup_at);
+      if (!isNaN(fDate.getTime())) {
+        if (fDate <= now) {
+          due_followups_count++;
+        }
+        if (fDate < now) {
+          overdue_followups_count++;
+        }
+        const targetDay = new Date(fDate.getFullYear(), fDate.getMonth(), fDate.getDate());
+        const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (targetDay.getTime() === nowDay.getTime()) {
+          today_followups_count++;
+        }
       }
     }
 
@@ -831,6 +863,8 @@ function getAnalytics() {
     won_revenue,
     deposits_collected,
     due_followups_count,
+    overdue_followups_count,
+    today_followups_count,
     by_stage,
     by_website_type,
     by_campaign

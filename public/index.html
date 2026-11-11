@@ -225,6 +225,39 @@
         </div>
 
         <div class="filters-group">
+          <!-- Stage Filter -->
+          <div class="select-wrapper">
+            <select id="filterStage" class="form-select">
+              <option value="">جميع المراحل</option>
+              <option value="new">عميل جديد (ميتا)</option>
+              <option value="contacted">تم التواصل المبدئي</option>
+              <option value="discovery">تحديد المتطلبات</option>
+              <option value="proposal">تم إرسال العرض</option>
+              <option value="negotiation">تفاوض ومراجعة</option>
+              <option value="won">صفقة ناجحة 🎉</option>
+              <option value="lost">لم يكتمل / مؤجل</option>
+            </select>
+          </div>
+
+          <!-- Campaign Filter -->
+          <div class="select-wrapper">
+            <select id="filterCampaign" class="form-select">
+              <option value="">جميع الحملات الإعلانية</option>
+            </select>
+          </div>
+
+          <!-- Ad Source Filter -->
+          <div class="select-wrapper">
+            <select id="filterAdSource" class="form-select">
+              <option value="">جميع مصادر الإعلانات</option>
+              <option value="meta_form">نموذج ميتا الفوري (Lead Form)</option>
+              <option value="whatsapp_ad">إعلان رسائل واتساب</option>
+              <option value="instagram_dm">رسائل إنستجرام</option>
+              <option value="messenger">رسائل ماسنجر (Messenger)</option>
+              <option value="manual">إدخال يدوي / توصية</option>
+            </select>
+          </div>
+
           <!-- Website Type Filter -->
           <div class="select-wrapper">
             <select id="filterWebsiteType" class="form-select">
@@ -247,21 +280,16 @@
             </select>
           </div>
 
-          <!-- Ad Source Filter -->
-          <div class="select-wrapper">
-            <select id="filterAdSource" class="form-select">
-              <option value="">جميع مصادر الإعلانات</option>
-              <option value="meta_form">نموذج ميتا الفوري (Lead Form)</option>
-              <option value="whatsapp_ad">إعلان رسائل واتساب</option>
-              <option value="instagram_dm">رسائل إنستجرام</option>
-              <option value="manual">إدخال يدوي / توصية</option>
-            </select>
-          </div>
+          <!-- Overdue Follow-ups Quick Filter -->
+          <button class="btn btn-toggle" id="btnToggleOverdueFollowups" title="تصفية العملاء المتأخر متابعتهم">
+            <span class="dot-indicator" style="background-color: var(--rose-500);"></span>
+            <span>🚨 متأخرة (<span id="badgeOverdueCount">0</span>)</span>
+          </button>
 
           <!-- Follow-up Due Quick Filter -->
-          <button class="btn btn-toggle" id="btnToggleDueFollowups">
+          <button class="btn btn-toggle" id="btnToggleDueFollowups" title="تصفية متابعات اليوم">
             <span class="dot-indicator"></span>
-            <span>متابعات اليوم فقط</span>
+            <span>📅 اليوم (<span id="badgeTodayCount">0</span>)</span>
           </button>
 
           <!-- Reset Filters Button -->
@@ -528,6 +556,8 @@
           <span class="drawer-source-badge" id="drawerSourceBadge">--</span>
           <span class="drawer-bullet">•</span>
           <span class="drawer-campaign-name" id="drawerCampaignName">--</span>
+          <span class="drawer-bullet" id="drawerSocialBullet" style="display:none;">•</span>
+          <span class="drawer-source-badge" id="drawerSocialBadge" style="display:none; background-color: #eff6ff; color: #1877F2; border-color: #bfdbfe;">--</span>
         </div>
       </div>
 
@@ -608,6 +638,13 @@
             <div class="form-group">
               <label for="editPhone">رقم الواتساب / الهاتف <span class="text-muted" style="font-size: 0.75rem; font-weight: normal; color: var(--ink-400);">(اختياري)</span></label>
               <input type="text" id="editPhone" class="form-input" placeholder="2010xxxxxxxx (اختياري)">
+              <div id="editPhoneWarning" class="field-warning-text hidden"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="editSocialHandle">يوزر / اسم الحساب (ماسنجر أو إنستجرام) <span class="text-muted" style="font-size: 0.75rem; font-weight: normal; color: var(--ink-400);">(اختياري)</span></label>
+              <input type="text" id="editSocialHandle" class="form-input" placeholder="مثال: @username أو رابط الحساب">
+              <div id="editSocialWarning" class="field-warning-text hidden"></div>
             </div>
 
             <div class="form-group">
@@ -659,6 +696,7 @@
                 <option value="meta_form">نموذج ميتا الفوري (Lead Form)</option>
                 <option value="whatsapp_ad">إعلان رسائل واتساب</option>
                 <option value="instagram_dm">رسائل إنستجرام</option>
+                <option value="messenger">رسائل ماسنجر (Messenger)</option>
                 <option value="manual">إدخال يدوي / توصية</option>
               </select>
             </div>
@@ -1017,6 +1055,13 @@
           <div class="form-group">
             <label for="newLeadPhone">رقم الواتساب / الهاتف <span class="text-muted" style="font-size: 0.75rem; font-weight: normal; color: var(--ink-400);">(اختياري)</span></label>
             <input type="text" id="newLeadPhone" class="form-input" placeholder="2010xxxxxxxx (اختياري)">
+            <div id="newLeadPhoneWarning" class="field-warning-text hidden"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="newLeadSocial">يوزر / اسم الحساب (ماسنجر أو إنستجرام) <span class="text-muted" style="font-size: 0.75rem; font-weight: normal; color: var(--ink-400);">(اختياري)</span></label>
+            <input type="text" id="newLeadSocial" class="form-input" placeholder="مثال: @username أو رابط الحساب">
+            <div id="newLeadSocialWarning" class="field-warning-text hidden"></div>
           </div>
 
           <div class="form-group">
@@ -1065,6 +1110,7 @@
               <option value="meta_form" selected>نموذج ميتا الفوري (Lead Form)</option>
               <option value="whatsapp_ad">إعلان رسائل واتساب</option>
               <option value="instagram_dm">رسائل إنستجرام</option>
+              <option value="messenger">رسائل ماسنجر (Messenger)</option>
               <option value="manual">إدخال يدوي / توصية</option>
             </select>
           </div>
@@ -1219,6 +1265,65 @@
           <button type="submit" class="btn btn-rose" id="btnConfirmLost">تأكيد الخسارة / التأجيل</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE CONFIRMATION -->
+  <div class="modal-overlay" id="deleteConfirmModalOverlay">
+    <div class="modal-box modal-sm" style="border-top: 4px solid var(--rose-500);">
+      <div class="modal-header">
+        <h3 class="modal-title text-rose" style="display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
+          </svg>
+          تأكيد حذف العميل
+        </h3>
+        <button class="modal-close" id="btnCloseDeleteModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--ink-800); line-height: 1.6;">
+          هل أنت متأكد من حذف العميل <strong id="deleteTargetClientName" style="color: var(--ink-900);"></strong> نهائياً؟
+        </p>
+        <div style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: var(--rose-600); line-height: 1.5;">
+          ⚠️ تحذير: سيتم حذف جميع سجلات المتابعات والنشاطات المرتبطة بهذا العميل، ولا يمكن التراجع عن هذا الإجراء.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCancelDeleteModal">إلغاء</button>
+        <button type="button" class="btn btn-rose" id="btnConfirmDeleteAction">نعم، احذف العميل نهائياً</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DUPLICATE WARNING -->
+  <div class="modal-overlay" id="duplicateWarningModalOverlay">
+    <div class="modal-box modal-sm" style="border-top: 4px solid var(--amber-500);">
+      <div class="modal-header">
+        <h3 class="modal-title text-amber" style="display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/>
+          </svg>
+          تنبيه: احتمال تكرار بيانات العميل
+        </h3>
+        <button class="modal-close" id="btnCloseDuplicateModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 12px; font-size: 0.92rem; color: var(--ink-800); line-height: 1.5;" id="duplicateModalText">
+          تم العثور على عميل مسجل مسبقاً بنفس رقم الهاتف أو اسم الحساب:
+        </p>
+        <div id="duplicateLeadDetailsBox" style="background: var(--slate-100); border: 1px solid var(--ink-200); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.86rem; color: var(--ink-800);">
+          <!-- dynamically populated -->
+        </div>
+        <p style="color: var(--ink-500); font-size: 0.8rem; margin: 0;">
+          هل ترغب في متابعة الحفظ على أي حال أم تفضل إلغاء العملية لمراجعة البيانات؟
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCancelDuplicateSave">إلغاء ومراجعة</button>
+        <button type="button" class="btn" id="btnConfirmDuplicateSave" style="background-color: var(--amber-600); color: white;">
+          متابعة الحفظ على أي حال
+        </button>
+      </div>
     </div>
   </div>
 

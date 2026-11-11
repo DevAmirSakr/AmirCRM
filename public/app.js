@@ -12,10 +12,12 @@ const state = {
   currentView: 'kanban', // 'kanban' | 'table' | 'analytics'
   filters: {
     search: '',
+    stage: '',
+    campaign: '',
     website_type: '',
     priority: '',
     ad_source: '',
-    followup: '' // 'due' or ''
+    followup: '' // 'overdue' | 'today' | 'due' | ''
   },
   selectedLead: null,
   selectedLeadActivities: [],
@@ -51,7 +53,8 @@ const AD_SOURCES = {
   meta_form: 'نموذج ميتا الفوري',
   whatsapp_ad: 'إعلان واتساب',
   instagram_dm: 'رسائل إنستجرام',
-  manual: 'إدخال يدوي'
+  messenger: 'رسائل ماسنجر',
+  manual: 'إدخال يدوي / توصية'
 };
 
 const PRIORITIES = {
@@ -194,6 +197,8 @@ function showToast(message, type = 'success') {
 async function apiGetLeads() {
   const params = new URLSearchParams();
   if (state.filters.search) params.set('search', state.filters.search);
+  if (state.filters.stage) params.set('stage', state.filters.stage);
+  if (state.filters.campaign) params.set('campaign', state.filters.campaign);
   if (state.filters.website_type) params.set('website_type', state.filters.website_type);
   if (state.filters.priority) params.set('priority', state.filters.priority);
   if (state.filters.ad_source) params.set('ad_source', state.filters.ad_source);
@@ -327,6 +332,190 @@ async function refreshData() {
 }
 
 // ============================================================================
+// Duplicate Checking & Campaign Options
+// ============================================================================
+let pendingDuplicateSaveCallback = null;
+
+function findDuplicateLead(phone, socialHandle, excludeId = null) {
+  const cleanPhone = cleanPhoneNumber(phone);
+  const normHandle = (socialHandle || '').trim().toLowerCase().replace(/^@/, '');
+
+  if (!cleanPhone && !normHandle) return null;
+
+  for (const lead of state.leads) {
+    if (excludeId && lead.id === excludeId) continue;
+
+    // Check phone duplicate (at least 7 digits to avoid matching short strings)
+    if (cleanPhone && cleanPhone.length >= 7) {
+      const existingClean = cleanPhoneNumber(lead.phone);
+      if (existingClean && existingClean === cleanPhone) {
+        return {
+          lead,
+          field: 'phone',
+          matchVal: lead.phone,
+          message: `رقم الهاتف (${lead.phone}) مسجل مسبقاً للعميل: ${lead.name}`
+        };
+      }
+    }
+
+    // Check social handle duplicate
+    if (normHandle) {
+      const existingHandle = (lead.social_handle || '').trim().toLowerCase().replace(/^@/, '');
+      if (existingHandle && existingHandle === normHandle) {
+        return {
+          lead,
+          field: 'social',
+          matchVal: lead.social_handle,
+          message: `اسم الحساب (${lead.social_handle}) مسجل مسبقاً للعميل: ${lead.name}`
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function showDuplicateModal(duplicateInfo, onConfirm) {
+  const modal = document.getElementById('duplicateWarningModalOverlay');
+  const detailsBox = document.getElementById('duplicateLeadDetailsBox');
+  const modalText = document.getElementById('duplicateModalText');
+  if (!modal) {
+    if (confirm(`تنبيه: يوجد عميل مسجل مسبقاً بنفس البيانات (${duplicateInfo.lead.name}). هل ترغب في المتابعة؟`)) {
+      onConfirm();
+    }
+    return;
+  }
+
+  const reasonLabel = duplicateInfo.field === 'phone' ? 'رقم الهاتف' : 'اسم الحساب / اليوزر';
+  if (modalText) modalText.textContent = `تم العثور على عميل مسجل مسبقاً بنفس ${reasonLabel}:`;
+  if (detailsBox) {
+    detailsBox.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 4px; color: var(--ink-900);">👤 ${escapeHtml(duplicateInfo.lead.name)}</div>
+      <div style="color: var(--ink-600); font-size: 0.82rem; margin-bottom: 2px;">🏢 النشاط: ${escapeHtml(duplicateInfo.lead.business_name || 'غير محدد')}</div>
+      <div style="color: var(--ink-600); font-size: 0.82rem; margin-bottom: 2px;">🏷️ المرحلة: ${escapeHtml(STAGES[duplicateInfo.lead.stage]?.label || duplicateInfo.lead.stage)}</div>
+      ${duplicateInfo.lead.phone ? `<div style="color: var(--ink-600); font-size: 0.82rem;">📞 الهاتف: ${escapeHtml(duplicateInfo.lead.phone)}</div>` : ''}
+      ${duplicateInfo.lead.social_handle ? `<div style="color: #1877F2; font-size: 0.82rem;">💬 الحساب: ${escapeHtml(duplicateInfo.lead.social_handle)}</div>` : ''}
+    `;
+  }
+
+  pendingDuplicateSaveCallback = onConfirm;
+  modal.classList.add('active');
+}
+
+function setupLiveDuplicateCheck(phoneInputId, socialInputId, phoneWarnId, socialWarnId, getExcludeIdFn) {
+  const phoneEl = document.getElementById(phoneInputId);
+  const socialEl = document.getElementById(socialInputId);
+  const phoneWarn = document.getElementById(phoneWarnId);
+  const socialWarn = document.getElementById(socialWarnId);
+
+  const check = () => {
+    const excludeId = getExcludeIdFn ? getExcludeIdFn() : null;
+    const phoneVal = phoneEl ? phoneEl.value.trim() : '';
+    const socialVal = socialEl ? socialEl.value.trim() : '';
+
+    if (phoneWarn) {
+      const clean = cleanPhoneNumber(phoneVal);
+      if (clean && clean.length >= 7) {
+        const dup = findDuplicateLead(phoneVal, '', excludeId);
+        if (dup) {
+          phoneWarn.innerHTML = `⚠️ تنبيه: هذا الرقم مسجل مسبقاً للعميل: <strong>${escapeHtml(dup.lead.name)}</strong> (${STAGES[dup.lead.stage]?.label || dup.lead.stage})`;
+          phoneWarn.classList.remove('hidden');
+        } else {
+          phoneWarn.classList.add('hidden');
+        }
+      } else {
+        phoneWarn.classList.add('hidden');
+      }
+    }
+
+    if (socialWarn) {
+      const norm = socialVal.toLowerCase().replace(/^@/, '');
+      if (norm) {
+        const dup = findDuplicateLead('', socialVal, excludeId);
+        if (dup) {
+          socialWarn.innerHTML = `⚠️ تنبيه: هذا الحساب مسجل مسبقاً للعميل: <strong>${escapeHtml(dup.lead.name)}</strong> (${STAGES[dup.lead.stage]?.label || dup.lead.stage})`;
+          socialWarn.classList.remove('hidden');
+        } else {
+          socialWarn.classList.add('hidden');
+        }
+      } else {
+        socialWarn.classList.add('hidden');
+      }
+    }
+  };
+
+  if (phoneEl) {
+    phoneEl.addEventListener('input', check);
+    phoneEl.addEventListener('blur', check);
+  }
+  if (socialEl) {
+    socialEl.addEventListener('input', check);
+    socialEl.addEventListener('blur', check);
+  }
+}
+
+function updateCampaignFilterOptions() {
+  const campaignSelect = document.getElementById('filterCampaign');
+  if (!campaignSelect) return;
+  const currentVal = state.filters.campaign || '';
+
+  const campaigns = new Set();
+  if (state.analytics?.by_campaign) {
+    state.analytics.by_campaign.forEach((c) => {
+      if (c.campaign_name && c.campaign_name.trim()) campaigns.add(c.campaign_name.trim());
+    });
+  }
+  (state.leads || []).forEach((l) => {
+    if (l.campaign_name && l.campaign_name.trim()) campaigns.add(l.campaign_name.trim());
+  });
+
+  campaignSelect.innerHTML = '<option value="">جميع الحملات الإعلانية</option>';
+  Array.from(campaigns).sort().forEach((camp) => {
+    const opt = document.createElement('option');
+    opt.value = camp;
+    opt.textContent = camp;
+    if (camp === currentVal) opt.selected = true;
+    campaignSelect.appendChild(opt);
+  });
+}
+
+function updateFollowupBadges() {
+  const overdueBtn = document.getElementById('btnToggleOverdueFollowups');
+  const todayBtn = document.getElementById('btnToggleDueFollowups');
+  const badgeOverdue = document.getElementById('badgeOverdueCount');
+  const badgeToday = document.getElementById('badgeTodayCount');
+
+  let overdueCount = state.analytics?.overdue_followups_count;
+  let todayCount = state.analytics?.today_followups_count;
+
+  if (overdueCount === undefined || todayCount === undefined) {
+    const now = new Date();
+    overdueCount = 0;
+    todayCount = 0;
+    (state.leads || []).forEach((lead) => {
+      if (lead.stage !== 'won' && lead.stage !== 'lost' && lead.next_followup_at) {
+        const d = new Date(lead.next_followup_at);
+        if (!isNaN(d.getTime())) {
+          if (d < now) overdueCount++;
+          const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          if (targetDay.getTime() === nowDay.getTime()) todayCount++;
+        }
+      }
+    });
+  }
+
+  if (badgeOverdue) badgeOverdue.textContent = overdueCount;
+  if (badgeToday) badgeToday.textContent = todayCount;
+
+  if (overdueBtn) {
+    overdueBtn.classList.toggle('active', state.filters.followup === 'overdue');
+  }
+  if (todayBtn) {
+    todayBtn.classList.toggle('active', state.filters.followup === 'today');
+  }
+}
+
+// ============================================================================
 // Rendering: KPIs & Sidebar
 // ============================================================================
 function renderKPIs() {
@@ -347,8 +536,17 @@ function renderKPIs() {
   const dueBadge = document.getElementById('kpiDueFollowups');
   dueBadge.textContent = a.due_followups_count || 0;
 
+  updateFollowupBadges();
+  updateCampaignFilterOptions();
+
   const dueStatus = document.getElementById('kpiDueStatus');
-  if (state.filters.followup === 'due') {
+  if (state.filters.followup === 'overdue') {
+    dueStatus.textContent = '✓ تصفية المتأخرة مفعلة';
+    document.getElementById('kpiFollowupCard').style.borderColor = '#ef4444';
+  } else if (state.filters.followup === 'today') {
+    dueStatus.textContent = '✓ تصفية متابعات اليوم';
+    document.getElementById('kpiFollowupCard').style.borderColor = '#0284c7';
+  } else if (state.filters.followup === 'due') {
     dueStatus.textContent = '✓ التصفية مفعلة حالياً';
     document.getElementById('kpiFollowupCard').style.borderColor = '#ef4444';
   } else {
@@ -453,6 +651,7 @@ function createKanbanCard(lead) {
       <div>
         <div class="card-client-name">${escapeHtml(lead.name)}</div>
         <div class="card-business-name">${escapeHtml(lead.business_name || 'بدون اسم نشاط')}</div>
+        ${lead.social_handle ? `<div class="card-social-tag" title="اسم الحساب / يوزر">💬 ${escapeHtml(lead.social_handle)}</div>` : ''}
       </div>
       <span class="card-priority-tag ${priorityMeta.class}">${priorityMeta.label}</span>
     </div>
@@ -625,6 +824,7 @@ function renderTable() {
       <td>
         <div style="display: flex; flex-direction: column;">
           <span class="table-phone">${escapeHtml(lead.phone || 'غير مسجل')}</span>
+          ${lead.social_handle ? `<span class="table-social-handle" title="اسم الحساب">💬 ${escapeHtml(lead.social_handle)}</span>` : ''}
           ${lead.email ? `<span style="font-size: 0.74rem; color: var(--ink-500);">${escapeHtml(lead.email)}</span>` : ''}
         </div>
       </td>
@@ -844,6 +1044,19 @@ function renderDrawerHeader(lead) {
   document.getElementById('drawerSourceBadge').textContent = AD_SOURCES[lead.ad_source] || lead.ad_source;
   document.getElementById('drawerCampaignName').textContent = lead.campaign_name || 'حملة ميتا';
 
+  const socialBadge = document.getElementById('drawerSocialBadge');
+  const socialBullet = document.getElementById('drawerSocialBullet');
+  if (socialBadge && socialBullet) {
+    if (lead.social_handle) {
+      socialBadge.textContent = `💬 ${lead.social_handle}`;
+      socialBadge.style.display = 'inline-block';
+      socialBullet.style.display = 'inline-block';
+    } else {
+      socialBadge.style.display = 'none';
+      socialBullet.style.display = 'none';
+    }
+  }
+
   const stageMeta = STAGES[lead.stage] || STAGES.new;
   const stageChip = document.getElementById('drawerStageChip');
   stageChip.textContent = stageMeta.label;
@@ -880,7 +1093,14 @@ function populateLeadSpecs(lead) {
   document.getElementById('editLeadId').value = lead.id;
   document.getElementById('editName').value = lead.name || '';
   document.getElementById('editPhone').value = lead.phone || '';
+  const socialEl = document.getElementById('editSocialHandle');
+  if (socialEl) socialEl.value = lead.social_handle || '';
   document.getElementById('editEmail').value = lead.email || '';
+
+  const pWarn = document.getElementById('editPhoneWarning');
+  const sWarn = document.getElementById('editSocialWarning');
+  if (pWarn) pWarn.classList.add('hidden');
+  if (sWarn) sWarn.classList.add('hidden');
   document.getElementById('editBusinessName').value = lead.business_name || '';
   document.getElementById('editWebsiteType').value = lead.website_type || 'ecommerce';
   document.getElementById('editStage').value = lead.stage || 'new';
@@ -971,7 +1191,11 @@ async function sendWhatsAppMessageAndLog() {
 
   const cleanPhone = cleanPhoneNumber(lead.phone);
   if (!cleanPhone) {
-    showToast('لا يوجد رقم واتساب مسجل لهذا العميل. يرجى إضافة رقم الهاتف في تفاصيل العميل أولاً.', 'warning');
+    if (lead.social_handle) {
+      showToast(`العميل بدون رقم واتساب. يمكنك نسخ الرسالة وإرسالها عبر ماسنجر/إنستجرام إلى (${lead.social_handle})`, 'warning');
+    } else {
+      showToast('لا يوجد رقم واتساب مسجل لهذا العميل. يرجى إضافة رقم الهاتف في تفاصيل العميل أولاً.', 'warning');
+    }
     return;
   }
 
@@ -1162,6 +1386,7 @@ function handleCsvText(text) {
   const colMap = {
     name: headers.findIndex((h) => h.includes('name') || h.includes('اسم') || h.includes('العميل')),
     phone: headers.findIndex((h) => h.includes('phone') || h.includes('هاتف') || h.includes('موبايل') || h.includes('واتس')),
+    social_handle: headers.findIndex((h) => h.includes('social') || h.includes('user') || h.includes('يوزر') || h.includes('حساب') || h.includes('انستجرام') || h.includes('ماسنجر')),
     email: headers.findIndex((h) => h.includes('email') || h.includes('بريد') || h.includes('ايميل')),
     business_name: headers.findIndex((h) => h.includes('business') || h.includes('شركة') || h.includes('نشاط')),
     website_type: headers.findIndex((h) => h.includes('website') || h.includes('نوع') || h.includes('type')),
@@ -1191,6 +1416,7 @@ function handleCsvText(text) {
     parsed.push({
       name: name || 'عميل ميتا',
       phone: phone ? String(phone).trim() : '',
+      social_handle: colMap.social_handle >= 0 ? String(row[colMap.social_handle] || '').trim() : '',
       email: colMap.email >= 0 ? (row[colMap.email] || '') : '',
       business_name: colMap.business_name >= 0 ? (row[colMap.business_name] || 'نشاط تجاري') : 'نشاط تجاري',
       website_type: siteType,
@@ -1302,56 +1528,82 @@ function initEventListeners() {
   });
 
   // Filters Dropdowns
-  document.getElementById('filterWebsiteType').addEventListener('change', (e) => {
+  document.getElementById('filterStage')?.addEventListener('change', (e) => {
+    state.filters.stage = e.target.value;
+    refreshData();
+  });
+
+  document.getElementById('filterCampaign')?.addEventListener('change', (e) => {
+    state.filters.campaign = e.target.value;
+    refreshData();
+  });
+
+  document.getElementById('filterWebsiteType')?.addEventListener('change', (e) => {
     state.filters.website_type = e.target.value;
     refreshData();
   });
 
-  document.getElementById('filterPriority').addEventListener('change', (e) => {
+  document.getElementById('filterPriority')?.addEventListener('change', (e) => {
     state.filters.priority = e.target.value;
     refreshData();
   });
 
-  document.getElementById('filterAdSource').addEventListener('change', (e) => {
+  document.getElementById('filterAdSource')?.addEventListener('change', (e) => {
     state.filters.ad_source = e.target.value;
     refreshData();
   });
 
-  // Due Followups Toggle Button & KPI Card Click
-  const btnToggleDue = document.getElementById('btnToggleDueFollowups');
-  btnToggleDue.addEventListener('click', () => {
-    toggleDueFilter();
-  });
-
-  document.getElementById('kpiFollowupCard').addEventListener('click', () => {
-    toggleDueFilter();
-  });
-
-  function toggleDueFilter() {
-    if (state.filters.followup === 'due') {
+  // Follow-up Filters: Overdue & Today
+  const btnToggleOverdue = document.getElementById('btnToggleOverdueFollowups');
+  btnToggleOverdue?.addEventListener('click', () => {
+    if (state.filters.followup === 'overdue') {
       state.filters.followup = '';
-      btnToggleDue.classList.remove('active');
     } else {
-      state.filters.followup = 'due';
-      btnToggleDue.classList.add('active');
+      state.filters.followup = 'overdue';
     }
     refreshData();
-  }
+  });
+
+  const btnToggleDue = document.getElementById('btnToggleDueFollowups');
+  btnToggleDue?.addEventListener('click', () => {
+    if (state.filters.followup === 'today') {
+      state.filters.followup = '';
+    } else {
+      state.filters.followup = 'today';
+    }
+    refreshData();
+  });
+
+  document.getElementById('kpiFollowupCard')?.addEventListener('click', () => {
+    if (state.filters.followup) {
+      state.filters.followup = '';
+    } else {
+      if ((state.analytics?.overdue_followups_count || 0) > 0) {
+        state.filters.followup = 'overdue';
+      } else {
+        state.filters.followup = 'today';
+      }
+    }
+    refreshData();
+  });
 
   // Reset Filters
-  document.getElementById('btnResetFilters').addEventListener('click', () => {
-    state.filters = { search: '', website_type: '', priority: '', ad_source: '', followup: '' };
+  document.getElementById('btnResetFilters')?.addEventListener('click', () => {
+    state.filters = { search: '', stage: '', campaign: '', website_type: '', priority: '', ad_source: '', followup: '' };
     searchInput.value = '';
     btnClearSearch.classList.add('hidden');
-    document.getElementById('filterWebsiteType').value = '';
-    document.getElementById('filterPriority').value = '';
-    document.getElementById('filterAdSource').value = '';
-    btnToggleDue.classList.remove('active');
+    if (document.getElementById('filterStage')) document.getElementById('filterStage').value = '';
+    if (document.getElementById('filterCampaign')) document.getElementById('filterCampaign').value = '';
+    if (document.getElementById('filterWebsiteType')) document.getElementById('filterWebsiteType').value = '';
+    if (document.getElementById('filterPriority')) document.getElementById('filterPriority').value = '';
+    if (document.getElementById('filterAdSource')) document.getElementById('filterAdSource').value = '';
+    btnToggleDue?.classList.remove('active');
+    btnToggleOverdue?.classList.remove('active');
     refreshData();
   });
 
   // Webhook Meta Simulator
-  document.getElementById('btnSimulateMeta').addEventListener('click', async () => {
+  document.getElementById('btnSimulateMeta')?.addEventListener('click', async () => {
     try {
       const result = await apiSimulateMetaLead();
       const lead = result.lead;
@@ -1362,26 +1614,37 @@ function initEventListeners() {
     }
   });
 
-  // New Lead Modal Trigger
-  document.getElementById('btnOpenNewLeadModal').addEventListener('click', () => {
+  // Setup Live Duplicate Warnings
+  setupLiveDuplicateCheck('newLeadPhone', 'newLeadSocial', 'newLeadPhoneWarning', 'newLeadSocialWarning');
+  setupLiveDuplicateCheck('editPhone', 'editSocialHandle', 'editPhoneWarning', 'editSocialWarning', () => document.getElementById('editLeadId')?.value);
+
+  // New Lead Modal Trigger (opens form ONLY without touching or opening existing drawer)
+  document.getElementById('btnOpenNewLeadModal')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeLeadDrawer();
     document.getElementById('newLeadForm').reset();
+    const pWarn = document.getElementById('newLeadPhoneWarning');
+    const sWarn = document.getElementById('newLeadSocialWarning');
+    if (pWarn) pWarn.classList.add('hidden');
+    if (sWarn) sWarn.classList.add('hidden');
     document.getElementById('newLeadModalOverlay').classList.add('active');
   });
 
-  document.getElementById('btnCloseNewLeadModal').addEventListener('click', () => {
+  document.getElementById('btnCloseNewLeadModal')?.addEventListener('click', () => {
     document.getElementById('newLeadModalOverlay').classList.remove('active');
   });
 
-  document.getElementById('btnCancelNewLead').addEventListener('click', () => {
+  document.getElementById('btnCancelNewLead')?.addEventListener('click', () => {
     document.getElementById('newLeadModalOverlay').classList.remove('active');
   });
 
   // Submit New Lead
-  document.getElementById('newLeadForm').addEventListener('submit', async (e) => {
+  document.getElementById('newLeadForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
       name: document.getElementById('newLeadName').value.trim(),
       phone: document.getElementById('newLeadPhone').value.trim(),
+      social_handle: document.getElementById('newLeadSocial')?.value.trim() || '',
       email: document.getElementById('newLeadEmail').value.trim(),
       business_name: document.getElementById('newLeadBusiness').value.trim(),
       website_type: document.getElementById('newLeadWebsiteType').value,
@@ -1395,12 +1658,25 @@ function initEventListeners() {
       notes: document.getElementById('newLeadNotes').value.trim()
     };
 
+    // Prevent duplicate: check before saving
+    if (!state.skipDuplicateCheck) {
+      const dup = findDuplicateLead(payload.phone, payload.social_handle);
+      if (dup) {
+        showDuplicateModal(dup, () => {
+          state.skipDuplicateCheck = true;
+          document.getElementById('newLeadForm').dispatchEvent(new Event('submit'));
+        });
+        return;
+      }
+    }
+    state.skipDuplicateCheck = false;
+
     try {
       const res = await apiCreateLead(payload);
-      showToast(`تم إضافة العميل (${res.lead.name}) بنجاح!`);
+      showToast(`تم إضافة العميل (${res.lead.name}) بنجاح! 🎉`);
       document.getElementById('newLeadModalOverlay').classList.remove('active');
       await refreshData();
-      openLeadDrawer(res.lead.id);
+      // DO NOT automatically open drawer, per user request
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -1531,6 +1807,7 @@ function initEventListeners() {
     const payload = {
       name: document.getElementById('editName').value.trim(),
       phone: document.getElementById('editPhone').value.trim(),
+      social_handle: document.getElementById('editSocialHandle')?.value.trim() || '',
       email: document.getElementById('editEmail').value.trim(),
       business_name: document.getElementById('editBusinessName').value.trim(),
       website_type: document.getElementById('editWebsiteType').value,
@@ -1546,6 +1823,19 @@ function initEventListeners() {
       notes: document.getElementById('editNotes').value.trim()
     };
 
+    // Duplicate check for edited lead
+    if (!state.skipDuplicateCheck) {
+      const dup = findDuplicateLead(payload.phone, payload.social_handle, id);
+      if (dup) {
+        showDuplicateModal(dup, () => {
+          state.skipDuplicateCheck = true;
+          document.getElementById('drawerLeadForm').dispatchEvent(new Event('submit'));
+        });
+        return;
+      }
+    }
+    state.skipDuplicateCheck = false;
+
     try {
       const res = await apiUpdateLead(id, payload);
       state.selectedLead = res.lead;
@@ -1558,18 +1848,55 @@ function initEventListeners() {
     }
   });
 
-  // Delete Lead
-  document.getElementById('btnDeleteLead').addEventListener('click', async () => {
+  // Delete Lead Modal Setup (No native browser alerts)
+  const deleteModal = document.getElementById('deleteConfirmModalOverlay');
+  document.getElementById('btnDeleteLead')?.addEventListener('click', () => {
     if (!state.selectedLead) return;
-    if (!confirm(`هل أنت متأكد من حذف العميل (${state.selectedLead.name}) نهائياً؟`)) return;
+    const nameEl = document.getElementById('deleteTargetClientName');
+    if (nameEl) nameEl.textContent = state.selectedLead.name;
+    deleteModal?.classList.add('active');
+  });
+
+  document.getElementById('btnCloseDeleteModal')?.addEventListener('click', () => {
+    deleteModal?.classList.remove('active');
+  });
+
+  document.getElementById('btnCancelDeleteModal')?.addEventListener('click', () => {
+    deleteModal?.classList.remove('active');
+  });
+
+  document.getElementById('btnConfirmDeleteAction')?.addEventListener('click', async () => {
+    if (!state.selectedLead) return;
+    const leadId = state.selectedLead.id;
+    const leadName = state.selectedLead.name;
+    deleteModal?.classList.remove('active');
 
     try {
-      await apiDeleteLead(state.selectedLead.id);
-      showToast('تم حذف العميل بنجاح');
+      await apiDeleteLead(leadId);
+      showToast(`تم حذف العميل (${leadName}) بنجاح`);
       closeLeadDrawer();
       await refreshData();
     } catch (err) {
       showToast(err.message, 'error');
+    }
+  });
+
+  // Duplicate Warning Modal Actions
+  const dupModal = document.getElementById('duplicateWarningModalOverlay');
+  document.getElementById('btnCloseDuplicateModal')?.addEventListener('click', () => {
+    dupModal?.classList.remove('active');
+    pendingDuplicateSaveCallback = null;
+  });
+  document.getElementById('btnCancelDuplicateSave')?.addEventListener('click', () => {
+    dupModal?.classList.remove('active');
+    pendingDuplicateSaveCallback = null;
+  });
+  document.getElementById('btnConfirmDuplicateSave')?.addEventListener('click', () => {
+    dupModal?.classList.remove('active');
+    if (typeof pendingDuplicateSaveCallback === 'function') {
+      const cb = pendingDuplicateSaveCallback;
+      pendingDuplicateSaveCallback = null;
+      cb();
     }
   });
 

@@ -76,6 +76,7 @@ function metaWebhookHandler(req, res) {
 
     let name = payload.name || payload.full_name;
     let phone = payload.phone || payload.phone_number;
+    let social_handle = payload.social_handle || payload.username || payload.ig_username || payload.messenger_id;
     let email = payload.email;
     let business_name = payload.business_name || payload.company_name;
     let website_type = payload.website_type;
@@ -102,6 +103,7 @@ function metaWebhookHandler(req, res) {
     const lead = db.createLead({
       name,
       phone: phone ? String(phone).trim() : '',
+      social_handle: social_handle ? String(social_handle).trim() : '',
       email: email || '',
       business_name: business_name || 'نشاط تجاري قيد الإنشاء',
       website_type: website_type || 'ecommerce',
@@ -128,8 +130,8 @@ function metaWebhookHandler(req, res) {
 // GET /api/leads
 router.get('/', (req, res) => {
   try {
-    const { stage, website_type, priority, ad_source, search, followup } = req.query;
-    const leads = db.getLeads({ stage, website_type, priority, ad_source, search, followup });
+    const { stage, website_type, priority, ad_source, campaign, search, followup } = req.query;
+    const leads = db.getLeads({ stage, website_type, priority, ad_source, campaign, search, followup });
     res.json({ leads });
   } catch (err) {
     console.error('Error getting leads:', err);
