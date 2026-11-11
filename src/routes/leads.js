@@ -99,13 +99,9 @@ function metaWebhookHandler(req, res) {
       email = `client_${Date.now().toString().slice(-4)}@example.com`;
     }
 
-    if (!phone) {
-      phone = generateRandomEgyptianPhone();
-    }
-
     const lead = db.createLead({
       name,
-      phone,
+      phone: phone ? String(phone).trim() : '',
       email: email || '',
       business_name: business_name || 'نشاط تجاري قيد الإنشاء',
       website_type: website_type || 'ecommerce',
