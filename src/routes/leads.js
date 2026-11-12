@@ -63,6 +63,23 @@ function generateRandomEgyptianPhone() {
   return `2${prefix}${digits}`.replace('201', '201'); // Ensure format 2010... or 2011...
 }
 
+function formatLeadForClient(lead, req) {
+  if (!lead) return lead;
+  const isLegacyBrowserTab =
+    req &&
+    req.headers &&
+    req.headers['x-crm-version'] !== '2' &&
+    typeof req.headers['user-agent'] === 'string' &&
+    req.headers['user-agent'].includes('Mozilla/');
+  if (isLegacyBrowserTab && lead.next_followup_at && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(lead.next_followup_at)) {
+    return {
+      ...lead,
+      next_followup_at: `${lead.next_followup_at}Z`
+    };
+  }
+  return lead;
+}
+
 // Handler for Meta Lead Ads Webhook
 function metaWebhookHandler(req, res) {
   try {
@@ -116,11 +133,11 @@ function metaWebhookHandler(req, res) {
       deposit_paid: 0,
       requirements,
       notes,
-      next_followup_at: new Date(Date.now() + 3 * 3600 * 1000).toISOString(), // due in 3 hours
+      next_followup_at: db.normalizeFollowupDate(new Date(Date.now() + 3 * 3600 * 1000)), // due in 3 hours (local wall-clock)
       _activitySummary: 'وصل العميل تلقائياً من إعلان ميتا (Meta Lead Ads Webhook)'
     });
 
-    return res.status(201).json({ lead });
+    return res.status(201).json({ lead: formatLeadForClient(lead, req) });
   } catch (err) {
     console.error('Error handling meta webhook:', err);
     return res.status(500).json({ error: 'خطأ في معالجة طلب الويب هوك', details: err.message });
@@ -132,7 +149,7 @@ router.get('/', (req, res) => {
   try {
     const { stage, website_type, priority, ad_source, campaign, search, followup } = req.query;
     const leads = db.getLeads({ stage, website_type, priority, ad_source, campaign, search, followup });
-    res.json({ leads });
+    res.json({ leads: leads.map((l) => formatLeadForClient(l, req)) });
   } catch (err) {
     console.error('Error getting leads:', err);
     res.status(500).json({ error: 'فشل في جلب العملاء', details: err.message });
@@ -147,7 +164,10 @@ router.post('/import', (req, res) => {
       return res.status(400).json({ error: 'صيغة البيانات غير صحيحة، يجب إرسال مصفوفة leads' });
     }
     const result = db.importLeads(leadsData);
-    res.status(201).json(result);
+    res.status(201).json({
+      ...result,
+      leads: (result.leads || []).map((l) => formatLeadForClient(l, req))
+    });
   } catch (err) {
     console.error('Error importing leads:', err);
     res.status(500).json({ error: 'فشل استيراد العملاء', details: err.message });
@@ -162,7 +182,7 @@ router.get('/:id', (req, res) => {
       return res.status(404).json({ error: 'العميل غير موجود' });
     }
     const activities = db.getActivitiesForLead(lead.id);
-    res.json({ lead, activities });
+    res.json({ lead: formatLeadForClient(lead, req), activities });
   } catch (err) {
     console.error('Error getting lead by id:', err);
     res.status(500).json({ error: 'فشل جلب تفاصيل العميل', details: err.message });
@@ -173,7 +193,7 @@ router.get('/:id', (req, res) => {
 router.post('/', (req, res) => {
   try {
     const lead = db.createLead(req.body || {});
-    res.status(201).json({ lead });
+    res.status(201).json({ lead: formatLeadForClient(lead, req) });
   } catch (err) {
     console.error('Error creating lead:', err);
     res.status(500).json({ error: 'فشل إنشاء العميل', details: err.message });
@@ -187,7 +207,7 @@ router.put('/:id', (req, res) => {
     if (!lead) {
       return res.status(404).json({ error: 'العميل غير موجود' });
     }
-    res.json({ lead });
+    res.json({ lead: formatLeadForClient(lead, req) });
   } catch (err) {
     console.error('Error updating lead:', err);
     res.status(500).json({ error: 'فشل تحديث بيانات العميل', details: err.message });
@@ -205,7 +225,7 @@ router.patch('/:id/stage', (req, res) => {
     if (!lead) {
       return res.status(404).json({ error: 'العميل غير موجود' });
     }
-    res.json({ lead });
+    res.json({ lead: formatLeadForClient(lead, req) });
   } catch (err) {
     console.error('Error updating lead stage:', err);
     res.status(500).json({ error: 'فشل تغيير مرحلة العميل', details: err.message });

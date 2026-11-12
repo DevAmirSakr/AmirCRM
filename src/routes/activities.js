@@ -43,6 +43,19 @@ function createActivityHandler(req, res) {
       return res.status(404).json({ error: 'العميل غير موجود' });
     }
 
+    const isLegacyBrowserTab =
+      req &&
+      req.headers &&
+      req.headers['x-crm-version'] !== '2' &&
+      typeof req.headers['user-agent'] === 'string' &&
+      req.headers['user-agent'].includes('Mozilla/');
+    if (isLegacyBrowserTab && result.lead && result.lead.next_followup_at && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(result.lead.next_followup_at)) {
+      result.lead = {
+        ...result.lead,
+        next_followup_at: `${result.lead.next_followup_at}Z`
+      };
+    }
+
     return res.status(201).json(result);
   } catch (err) {
     console.error('Error logging activity:', err);

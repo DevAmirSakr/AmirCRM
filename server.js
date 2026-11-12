@@ -25,9 +25,17 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend assets
+// Serve static frontend assets with no-store cache headers so updates apply immediately
 const publicPath = path.join(__dirname, 'public');
-app.use(express.static(publicPath));
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
+app.use(express.static(publicPath, { etag: false, lastModified: false, maxAge: 0 }));
 
 // API Routes
 app.use('/api/leads', leadsRouter);

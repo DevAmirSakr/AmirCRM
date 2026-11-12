@@ -29,20 +29,71 @@ function ensureDir() {
   }
 }
 
+/**
+ * Normalize a follow-up datetime input to local wall-clock YYYY-MM-DDTHH:mm (Africa/Cairo).
+ * Preserves local datetime-local values unchanged so they never shift by UTC offsets.
+ */
+function normalizeFollowupDate(dateInput) {
+  if (!dateInput) return null;
+  if (typeof dateInput === 'string') {
+    const str = dateInput.trim();
+    if (!str) return null;
+    // Match YYYY-MM-DDTHH:mm wall-clock format directly (with optional :ss or +02:00 / legacy 17-char Z)
+    const wallClockMatch = str.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(?::\d{2})?(?:Z|\+02:00)?$/);
+    if (wallClockMatch) {
+      return wallClockMatch[1];
+    }
+  }
+
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(d.getTime())) {
+    const str = String(dateInput).trim();
+    return str.length >= 16 ? str.slice(0, 16) : null;
+  }
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Cairo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(d);
+  const map = {};
+  parts.forEach((p) => { map[p.type] = p.value; });
+  const hh = map.hour === '24' ? '00' : map.hour;
+  return `${map.year}-${map.month}-${map.day}T${hh}:${map.minute}`;
+}
+
+/**
+ * Parse a stored follow-up date string in Africa/Cairo (+02:00) local time.
+ */
+function parseFollowupDate(dateStr) {
+  if (!dateStr) return null;
+  const str = String(dateStr).trim();
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(?:Z|\+02:00)?$/);
+  if (m) {
+    return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6] || '00'}+02:00`);
+  }
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function generateInitialSeed() {
   const now = Date.now();
   const hour = 3600 * 1000;
   const day = 24 * hour;
 
-  // 3 due followups in the past / today
-  const dueYesterday = new Date(now - 18 * hour).toISOString();
-  const dueThisMorning = new Date(now - 4 * hour).toISOString();
-  const dueJustNow = new Date(now - 1 * hour).toISOString();
+  // 3 due followups in the past / today (stored as local wall-clock YYYY-MM-DDTHH:mm)
+  const dueYesterday = normalizeFollowupDate(new Date(now - 18 * hour));
+  const dueThisMorning = normalizeFollowupDate(new Date(now - 4 * hour));
+  const dueJustNow = normalizeFollowupDate(new Date(now - 1 * hour));
 
   // Future followups
-  const future2Days = new Date(now + 2 * day).toISOString();
-  const future3Days = new Date(now + 3 * day).toISOString();
-  const future4Days = new Date(now + 4 * day).toISOString();
+  const future2Days = normalizeFollowupDate(new Date(now + 2 * day));
+  const future3Days = normalizeFollowupDate(new Date(now + 3 * day));
+  const future4Days = normalizeFollowupDate(new Date(now + 4 * day));
 
   const leads = [
     {
@@ -486,8 +537,8 @@ function getLeads(filters = {}) {
     list = list.filter(l => {
       if (l.stage === 'won' || l.stage === 'lost') return false;
       if (!l.next_followup_at) return false;
-      const target = new Date(l.next_followup_at);
-      if (isNaN(target.getTime())) return false;
+      const target = parseFollowupDate(l.next_followup_at);
+      if (!target) return false;
 
       if (filters.followup === 'overdue') {
         return target < now;
@@ -543,7 +594,7 @@ function createLead(leadData) {
     deposit_paid: Number(leadData.deposit_paid) || 0,
     requirements: Array.isArray(leadData.requirements) ? leadData.requirements : [],
     notes: leadData.notes ? String(leadData.notes).trim() : '',
-    next_followup_at: leadData.next_followup_at || null,
+    next_followup_at: normalizeFollowupDate(leadData.next_followup_at),
     last_contacted_at: leadData.last_contacted_at || null,
     lost_reason: leadData.lost_reason || '',
     created_at: leadData.created_at || now,
@@ -589,6 +640,9 @@ function updateLead(id, updates) {
   if (updates.budget !== undefined) updatedLead.budget = Number(updates.budget) || 0;
   if (updates.deal_value !== undefined) updatedLead.deal_value = Number(updates.deal_value) || 0;
   if (updates.deposit_paid !== undefined) updatedLead.deposit_paid = Number(updates.deposit_paid) || 0;
+  if (updates.next_followup_at !== undefined) {
+    updatedLead.next_followup_at = normalizeFollowupDate(updates.next_followup_at);
+  }
   if (updates.requirements !== undefined) {
     updatedLead.requirements = Array.isArray(updates.requirements) ? updates.requirements : [];
   }
@@ -718,7 +772,7 @@ function createActivity(leadId, activityData) {
   lead.updated_at = now;
 
   if (activityData.next_followup_at !== undefined) {
-    lead.next_followup_at = activityData.next_followup_at || null;
+    lead.next_followup_at = normalizeFollowupDate(activityData.next_followup_at);
   }
   if (activityData.deal_value !== undefined && activityData.deal_value !== null && activityData.deal_value !== '') {
     lead.deal_value = Number(activityData.deal_value) || 0;
@@ -812,8 +866,8 @@ function getAnalytics() {
 
     // Due followups check
     if (lead.stage !== 'won' && lead.stage !== 'lost' && lead.next_followup_at) {
-      const fDate = new Date(lead.next_followup_at);
-      if (!isNaN(fDate.getTime())) {
+      const fDate = parseFollowupDate(lead.next_followup_at);
+      if (fDate) {
         if (fDate <= now) {
           due_followups_count++;
         }
@@ -893,6 +947,8 @@ module.exports = {
   importLeads,
   getAnalytics,
   resetDb,
+  normalizeFollowupDate,
+  parseFollowupDate,
   STAGE_LABELS,
   WEBSITE_TYPE_LABELS
 };

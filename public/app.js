@@ -110,10 +110,21 @@ function cleanPhoneNumber(phone) {
   return phone.toString().replace(/[^0-9]/g, '');
 }
 
+function parseFollowupDate(dateStr) {
+  if (!dateStr) return null;
+  const str = String(dateStr).trim();
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(?:Z|\+02:00)?$/);
+  if (m) {
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6] || 0));
+  }
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return 'غير محدد';
   try {
-    const d = new Date(dateStr);
+    const d = parseFollowupDate(dateStr) || new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleDateString('ar-EG', {
       year: 'numeric',
@@ -149,12 +160,19 @@ function formatRelativeTime(dateStr) {
 
 function toDateTimeLocalValue(dateInput) {
   if (!dateInput) return '';
-  const d = new Date(dateInput);
+  const str = String(dateInput).trim();
+  if (!str) return '';
+
+  // If already in wall-clock YYYY-MM-DDTHH:mm format (or with optional :ss / +02:00 / legacy 17-char Z),
+  // return the wall-clock YYYY-MM-DDTHH:mm directly without any UTC conversion.
+  const wallClockMatch = str.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(?::\d{2})?(?:Z|\+02:00)?$/);
+  if (wallClockMatch) {
+    return wallClockMatch[1];
+  }
+
+  const d = new Date(str);
   if (isNaN(d.getTime())) {
-    if (typeof dateInput === 'string' && dateInput.length >= 16) {
-      return dateInput.slice(0, 16);
-    }
-    return '';
+    return str.length >= 16 ? str.slice(0, 16) : '';
   }
   const pad = (n) => String(n).padStart(2, '0');
   const year = d.getFullYear();
@@ -169,9 +187,9 @@ function getFollowupStatus(dateStr, stage) {
   if (!dateStr || stage === 'won' || stage === 'lost') {
     return null;
   }
-  const target = new Date(dateStr);
+  const target = parseFollowupDate(dateStr);
   const now = new Date();
-  if (isNaN(target.getTime())) return null;
+  if (!target) return null;
 
   const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
   const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -223,6 +241,11 @@ function showToast(message, type = 'success') {
 // ============================================================================
 // API Client
 // ============================================================================
+const CRM_HEADERS = {
+  'Content-Type': 'application/json',
+  'X-CRM-Version': '2'
+};
+
 async function apiGetLeads() {
   const params = new URLSearchParams();
   if (state.filters.search) params.set('search', state.filters.search);
@@ -233,13 +256,17 @@ async function apiGetLeads() {
   if (state.filters.ad_source) params.set('ad_source', state.filters.ad_source);
   if (state.filters.followup) params.set('followup', state.filters.followup);
 
-  const res = await fetch(`/api/leads?${params.toString()}`);
+  const res = await fetch(`/api/leads?${params.toString()}`, {
+    headers: { 'X-CRM-Version': '2' }
+  });
   if (!res.ok) throw new Error('فشل جلب قائمة العملاء');
   return await res.json();
 }
 
 async function apiGetLead(id) {
-  const res = await fetch(`/api/leads/${id}`);
+  const res = await fetch(`/api/leads/${id}`, {
+    headers: { 'X-CRM-Version': '2' }
+  });
   if (!res.ok) throw new Error('فشل جلب تفاصيل العميل');
   return await res.json();
 }
@@ -247,7 +274,7 @@ async function apiGetLead(id) {
 async function apiCreateLead(leadData) {
   const res = await fetch('/api/leads', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: CRM_HEADERS,
     body: JSON.stringify(leadData)
   });
   if (!res.ok) {
@@ -260,7 +287,7 @@ async function apiCreateLead(leadData) {
 async function apiUpdateLead(id, data) {
   const res = await fetch(`/api/leads/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: CRM_HEADERS,
     body: JSON.stringify(data)
   });
   if (!res.ok) throw new Error('فشل تحديث بيانات العميل');
@@ -273,7 +300,7 @@ async function apiUpdateStage(id, stage, lost_reason = '', deposit_paid = undefi
 
   const res = await fetch(`/api/leads/${id}/stage`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: CRM_HEADERS,
     body: JSON.stringify(body)
   });
   if (!res.ok) throw new Error('فشل تحديث مرحلة العميل');
@@ -281,7 +308,10 @@ async function apiUpdateStage(id, stage, lost_reason = '', deposit_paid = undefi
 }
 
 async function apiDeleteLead(id) {
-  const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+  const res = await fetch(`/api/leads/${id}`, {
+    method: 'DELETE',
+    headers: { 'X-CRM-Version': '2' }
+  });
   if (!res.ok) throw new Error('فشل حذف العميل');
   return await res.json();
 }
@@ -289,7 +319,7 @@ async function apiDeleteLead(id) {
 async function apiAddActivity(leadId, activityData) {
   const res = await fetch(`/api/leads/${leadId}/activities`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: CRM_HEADERS,
     body: JSON.stringify(activityData)
   });
   if (!res.ok) throw new Error('فشل توثيق النشاط');
@@ -299,7 +329,7 @@ async function apiAddActivity(leadId, activityData) {
 async function apiImportLeads(leadsArray) {
   const res = await fetch('/api/leads/import', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: CRM_HEADERS,
     body: JSON.stringify({ leads: leadsArray })
   });
   if (!res.ok) throw new Error('فشل استيراد العملاء');
@@ -309,7 +339,7 @@ async function apiImportLeads(leadsArray) {
 async function apiSimulateMetaLead() {
   const res = await fetch('/api/webhook/meta', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: CRM_HEADERS,
     body: JSON.stringify({})
   });
   if (!res.ok) throw new Error('فشل استقبال ليد محاكاة ميتا');
@@ -317,7 +347,9 @@ async function apiSimulateMetaLead() {
 }
 
 async function apiGetAnalytics() {
-  const res = await fetch('/api/analytics');
+  const res = await fetch('/api/analytics', {
+    headers: { 'X-CRM-Version': '2' }
+  });
   if (!res.ok) throw new Error('فشل جلب الإحصائيات');
   return await res.json();
 }
@@ -522,8 +554,8 @@ function updateFollowupBadges() {
     todayCount = 0;
     (state.leads || []).forEach((lead) => {
       if (lead.stage !== 'won' && lead.stage !== 'lost' && lead.next_followup_at) {
-        const d = new Date(lead.next_followup_at);
-        if (!isNaN(d.getTime())) {
+        const d = parseFollowupDate(lead.next_followup_at);
+        if (d) {
           if (d < now) overdueCount++;
           const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
           const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1163,6 +1195,8 @@ function populateLeadSpecs(lead) {
   document.getElementById('editNotes').value = lead.notes || '';
 
   document.getElementById('editNextFollowup').value = toDateTimeLocalValue(lead.next_followup_at);
+  const actFollowupEl = document.getElementById('activityFollowupDate');
+  if (actFollowupEl) actFollowupEl.value = '';
 
   const hasContact = Boolean(cleanPhoneNumber(lead.phone) || (lead.social_handle && lead.social_handle.trim()));
   const drawerWarn = document.getElementById('drawerNoContactWarning');
@@ -1617,8 +1651,9 @@ function exportLeadsToExcel() {
     const deposit = Number(lead.deposit_paid || 0);
     const remaining = Math.max(0, dealVal - deposit);
 
-    const followupStr = lead.next_followup_at
-      ? new Date(lead.next_followup_at).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
+    const parsedFollowup = parseFollowupDate(lead.next_followup_at);
+    const followupStr = parsedFollowup
+      ? parsedFollowup.toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
       : '';
     const contactedStr = lead.last_contacted_at
       ? new Date(lead.last_contacted_at).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
@@ -1844,7 +1879,7 @@ function initEventListeners() {
       campaign_name: document.getElementById('newLeadCampaign').value.trim(),
       budget: Number(document.getElementById('newLeadBudget').value) || 0,
       deal_value: Number(document.getElementById('newLeadDealValue').value) || 0,
-      next_followup_at: document.getElementById('newLeadNextFollowup').value || null,
+      next_followup_at: toDateTimeLocalValue(document.getElementById('newLeadNextFollowup').value) || null,
       notes: document.getElementById('newLeadNotes').value.trim()
     };
 
@@ -2015,7 +2050,7 @@ function initEventListeners() {
       budget: Number(document.getElementById('editBudget').value) || 0,
       deal_value: Number(document.getElementById('editDealValue').value) || 0,
       deposit_paid: Number(document.getElementById('editDepositPaid').value) || 0,
-      next_followup_at: document.getElementById('editNextFollowup').value || null,
+      next_followup_at: toDateTimeLocalValue(document.getElementById('editNextFollowup').value) || null,
       requirements: reqChecked,
       notes: document.getElementById('editNotes').value.trim()
     };
@@ -2143,7 +2178,7 @@ function initEventListeners() {
 
     const type = document.getElementById('activityType').value;
     const summary = document.getElementById('activitySummary').value.trim();
-    const followupDate = document.getElementById('activityFollowupDate').value;
+    const followupDate = toDateTimeLocalValue(document.getElementById('activityFollowupDate').value);
 
     const payload = {
       type,
@@ -2155,6 +2190,7 @@ function initEventListeners() {
       await apiAddActivity(state.selectedLead.id, payload);
       showToast('تم توثيق النشاط بنجاح! 📋');
       document.getElementById('activitySummary').value = '';
+      document.getElementById('activityFollowupDate').value = '';
 
       // Refresh lead details and timeline
       const fresh = await apiGetLead(state.selectedLead.id);
